@@ -1,18 +1,34 @@
 import { SurveyPageProps, SurveyPageState } from "./types";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function SurveyPage1({ onNext, onAnswerChange }: SurveyPageProps & { onAnswerChange: (page: string, answers: SurveyPageState) => void }) {
   const [state, setState] = useState<SurveyPageState>({
     answer1: "",
-    answer2: ""
+    answer2: "",
+    timeSpent: 0
   });
+
+  useEffect(() => {
+    let startTime = Date.now();
+    let timer: NodeJS.Timeout;
+
+    // 1초마다 timeSpent 업데이트
+    timer = setInterval(() => {
+      const timeSpent = Math.round((Date.now() - startTime) / 1000);
+      setState(prev => ({ ...prev, timeSpent }));
+    }, 1000);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
 
   const handleNext = () => {
     if (!state.answer1 || !state.answer2) {
       alert("답변을 모두 입력해주세요");
       return;
     }
-    onAnswerChange('page1', state);
+    onAnswerChange('page1', { ...state, timeSpent: state.timeSpent });
     onNext();
   };
 

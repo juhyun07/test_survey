@@ -101,27 +101,36 @@ export default function SurveyComplete({ onReset, answers }: SurveyCompleteProps
             <h3 className="text-xl font-bold mb-4">설문 결과</h3>
             
             {Object.entries(answers).map(([page, pageAnswers], index) => {
-              const pageKey = page as keyof Questions;
-              return (
-                <div key={page} className="mb-6 p-3 border rounded-lg">
-                  <h4 className="text-lg font-bold mb-2">{index + 1}번 페이지</h4>
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <span className="font-semibold">{questions[pageKey].question1}</span>
-                      <p className="text-gray-700 bg-gray-50 p-1.5 rounded">{page === 'page1' ? (pageAnswers as SurveyPageState).answer1 :
-                       page === 'page2' ? (pageAnswers as SurveyPageState2).answer1 :
-                       page === 'page3' ? (pageAnswers as SurveyPageState3).answer1 : ''}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="font-semibold">{questions[pageKey].question2}</span>
-                      <p className="text-gray-700 bg-gray-50 p-1.5 rounded">{page === 'page1' ? (pageAnswers as SurveyPageState).answer2 :
-                       page === 'page2' ? (pageAnswers as SurveyPageState2).answer2 :
-                       page === 'page3' ? (pageAnswers as SurveyPageState3).answer2 : ''}</p>
-                    </div>
+            // totalTime 속성은 스킵
+            if (page === 'totalTime') return null;
+            
+            const pageKey = page as keyof Questions;
+            return (
+              <div key={page} className="mb-6 p-3 border rounded-lg">
+                <h4 className="text-lg font-bold mb-2">{index + 1}번 페이지</h4>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <span className="font-semibold">{questions[pageKey].question1}</span>
+                    <p className="text-gray-700 bg-gray-50 p-1.5 rounded">{page === 'page1' ? (pageAnswers as SurveyPageState).answer1 :
+                    page === 'page2' ? (pageAnswers as SurveyPageState2).answer1 :
+                    page === 'page3' ? (pageAnswers as SurveyPageState3).answer1 : ''}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="font-semibold">{questions[pageKey].question2}</span>
+                    <p className="text-gray-700 bg-gray-50 p-1.5 rounded">{page === 'page1' ? (pageAnswers as SurveyPageState).answer2 :
+                    page === 'page2' ? (pageAnswers as SurveyPageState2).answer2 :
+                    page === 'page3' ? (pageAnswers as SurveyPageState3).answer2 : ''}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="font-semibold">페이지 체류 시간</span>
+                    <p className="text-gray-700 bg-gray-50 p-1.5 rounded">{page === 'page1' ? (pageAnswers as SurveyPageState).timeSpent :
+                    page === 'page2' ? (pageAnswers as SurveyPageState2).timeSpent :
+                    page === 'page3' ? (pageAnswers as SurveyPageState3).timeSpent : 0}초</p>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            );
+          }).filter(Boolean)}
 
             <div className="mt-6 flex justify-end">
               <button

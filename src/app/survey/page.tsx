@@ -10,9 +10,10 @@ import SurveyComplete from "./complete";
 export default function Survey() {
   const [currentPage, setCurrentPage] = useState(1);
   const [answers, setAnswers] = useState<SurveyResult>({
-    page1: { answer1: '', answer2: '' },
-    page2: { answer1: '', answer2: '' },
-    page3: { answer1: '', answer2: '' }
+    page1: { answer1: '', answer2: '', timeSpent: 0 },
+    page2: { answer1: '', answer2: '', timeSpent: 0 },
+    page3: { answer1: '', answer2: '', timeSpent: 0 },
+    totalTime: 0
   });
   const totalPages = 3;
 
