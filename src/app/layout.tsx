@@ -40,6 +40,9 @@ export default function RootLayout({
               <li>
                 <a href="/survey" className="hover:text-white/80">설문조사</a>
               </li>
+              <li>
+                <a href="/survey/settings" className="hover:text-white/80">설문조사 설정</a>
+              </li>
             </ul>
           </div>
         </nav>
