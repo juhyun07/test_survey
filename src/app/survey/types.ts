@@ -36,30 +36,3 @@ export type SurveyCompleteState = {
   isOpen: boolean;
   results: SurveyResult | null;
 };
-
-// 설문조사 편집 관련 타입
-export type QuestionType = 'MULTIPLE_CHOICE' | 'TEXT_ENTRY';
-
-export type MultipleChoiceOption = {
-  id: string;
-  text: string;
-};
-
-export type Question = {
-  id: string;
-  type: QuestionType;
-  text: string;
-  options?: MultipleChoiceOption[];
-  exportTag?: string; // Q8 같은 내보내기 태그
-  optionCount: number; // 선택항목 수 (1-5)
-};
-
-export type SurveyEditorState = {
-  questions: Question[];
-  selectedQuestionId?: string;
-  previewMode: boolean;
-};
-
-export type SurveyEditorProps = {
-  onSave?: (questions: Question[]) => void;
-};
