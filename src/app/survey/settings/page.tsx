@@ -1,6 +1,6 @@
 'use client';
 
-import SurveyEditor from '../editor';
+import SurveyEditor from './editor';
 
 export default function SurveySettingsPage() {
   const handleSave = (questions: any[]) => {
@@ -10,7 +10,7 @@ export default function SurveySettingsPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold p-4">설문조사 설정</h1>
+      <h1 className="text-2xl font-bold p-3">설문조사 설정</h1>
       <SurveyEditor 
         onSave={handleSave}
       />

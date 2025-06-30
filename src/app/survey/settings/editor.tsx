@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { QuestionType, Question, MultipleChoiceOption, SurveyEditorState, SurveyEditorProps } from './types';
+import { QuestionType, Question, MultipleChoiceOption, SurveyEditorState, SurveyEditorProps } from '../types';
 
 // 입력 필드의 border 스타일을 관리하는 유틸리티 함수
 const getInputBorderClass = (previewMode: boolean) => {
@@ -120,7 +120,7 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps) {
   return (
     <div className="flex h-screen">
       {/* 왼쪽 패널 */}
-      <div className="w-1/4 p-4 border-r">
+      <div className="w-1/4 p-4 border-r px-5">
         <div className="mb-4">
           <label className="block mb-2">질문 유형</label>
           <select
@@ -188,7 +188,7 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps) {
       </div>
 
       {/* 중앙 패널 */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 pl-6">
         {state.questions.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500">질문을 추가해주세요.</p>
@@ -222,7 +222,7 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps) {
                       onChange={(e) => updateQuestion(state.selectedQuestionId!, { exportTag: e.target.value })}
                     />
                   </div>
-                  <div className="mb-2">
+                  <div className="mb-1">
                     <input
                       type="text"
                       className={`w-full p-2 ${getInputBorderClass(false)}`}
@@ -238,7 +238,7 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps) {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     {state.questions.find(q => q.id === state.selectedQuestionId)?.options?.map((opt) => (
-                      <div key={opt.id} className="flex items-center p-2">
+                      <div key={opt.id} className="flex items-center p-1">
                         <input
                           type="radio"
                           name={`question_${state.selectedQuestionId}`}
@@ -256,7 +256,7 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps) {
                   </div>
                 </div>
               ) : (
-                <div className="mt-4">
+                <div className="mt-1">
                   <input
                     type="text"
                     className={`w-full p-2 ${getInputBorderClass(false)}`}
