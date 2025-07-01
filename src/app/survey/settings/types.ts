@@ -45,6 +45,7 @@ export interface SideBySideOption {
     title: string;
     answers: string[];
   }[];
+  descriptionCount: number;  // 서술 수
 }
 
 export interface Question {

@@ -1,3 +1,6 @@
 node_modules
 .next
 .vscode
+
+# TypeScript build info
+tsconfig.tsbuildinfo

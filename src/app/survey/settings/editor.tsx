@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Question, MultipleChoiceOption, SideBySideOption, SurveyEditorState, SurveyEditorProps, QuestionType, MultipleChoiceQuestionProps, SideBySideQuestionProps, TextEntryQuestionProps } from './types';
 import type { JSX } from 'react';
+import { CounterInput } from './components/CounterInput';
 
 // 상수 정의
 const COLUMN_COUNT_RANGE = { min: 2, max: 4 };
@@ -146,15 +147,41 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
           sideBySideOptions: Array.from({ length: newOptionCount }, (_, i) => ({
             id: `${questionId}-option-${i}`,
             text: currentProps.sideBySideOptions?.[i]?.text || '',
+            descriptionCount: currentProps.sideBySideOptions?.[i]?.descriptionCount || 1,
             columns: Array.from({ length: currentProps.columnCount }, (_, j) => ({
               title: currentProps.sideBySideOptions?.[i]?.columns?.[j]?.title || `열 ${j + 1} 제목`,
-              answers: ['']
+              answers: currentProps.sideBySideOptions?.[i]?.columns?.[j]?.answers || ['']
             }))
           }))
         }
       };
       setState(prev => ({ ...prev, questions: newQuestions }));
     }
+  };
+
+  const updateDescriptionCount = (questionId: string, optionIndex: number, newDescriptionCount: number) => {
+    const questionIndex = state.questions.findIndex(q => q.id === questionId);
+    if (questionIndex === -1) return;
+
+    const newQuestions = [...state.questions];
+    const currentProps = newQuestions[questionIndex].props as SideBySideQuestionProps;
+
+    newQuestions[questionIndex] = {
+      ...newQuestions[questionIndex],
+      props: {
+        ...currentProps,
+        sideBySideOptions: currentProps.sideBySideOptions?.map((opt, idx) => {
+          if (idx === optionIndex) {
+            return {
+              ...opt,
+              descriptionCount: newDescriptionCount
+            };
+          }
+          return opt;
+        }) || []
+      }
+    };
+    setState(prev => ({ ...prev, questions: newQuestions }));
   };
 
   const updateColumnCount = (questionId: string, newColumnCount: number) => {
@@ -212,7 +239,11 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
       const updatedOption = {
         id: currentOptions[optionIndex]?.id || crypto.randomUUID(),
         text: updates.text || currentOptions[optionIndex]?.text || '',
-        columns: updates.columns || currentOptions[optionIndex]?.columns || Array.from({ length: (currentProps as SideBySideQuestionProps).columnCount }, (_, i) => '')
+        descriptionCount: updates.descriptionCount || currentOptions[optionIndex]?.descriptionCount || 1,
+        columns: updates.columns || currentOptions[optionIndex]?.columns || Array.from({ length: (currentProps as SideBySideQuestionProps).columnCount }, (_, i) => ({
+          title: `열 ${i + 1} 제목`,
+          answers: ['']
+        }))
       };
       newQuestions[questionIndex] = {
         ...newQuestions[questionIndex],
@@ -301,9 +332,34 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
           </div>
         )}
 
+        {/* 병렬 비교 질문의 편집 영역 */}
+        {currentQuestion?.type === QuestionType.SIDE_BY_SIDE && (
+          <div className="space-y-4">
+            <CounterInput
+              value={(currentQuestion?.props as SideBySideQuestionProps).columnCount}
+              minValue={2}
+              maxValue={4}
+              onChange={(value) => updateColumnCount(state.selectedQuestionId!, value)}
+              label="열 수"
+            />
+
+            <CounterInput
+              value={(currentQuestion?.props as SideBySideQuestionProps).sideBySideOptions?.[0]?.descriptionCount || 1}
+              minValue={1}
+              maxValue={4}
+              onChange={(value) => {
+                const currentOption = (currentQuestion?.props as SideBySideQuestionProps).sideBySideOptions?.[0];
+                if (currentOption) {
+                  updateDescriptionCount(state.selectedQuestionId!, 0, value);
+                }
+              }}
+              label="서술 수"
+            />
+          </div>
+        )}
+
         {/* 질문 편집 영역 */}
         <div className="space-y-4">
-          {/* 텍스트 엔트리 옵션 편집 영역 */}
           {currentQuestion?.type === QuestionType.TEXT_ENTRY && (
             <div className="space-y-2">
               <div>
@@ -327,54 +383,6 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
             </div>
           )}
 
-          {/* 병렬 비교 옵션 편집 영역 */}
-          {showSideBySideLayer && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">병렬 비교 옵션</h3>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <label>열 수:</label>
-                  <select
-                    value={(currentQuestion?.props as SideBySideQuestionProps).columnCount}
-                    onChange={(e) => updateColumnCount(state.selectedQuestionId!, parseInt(e.target.value))}
-                    className="border border-gray-300 rounded px-2 py-1"
-                  >
-                    {Array.from({ length: COLUMN_COUNT_RANGE.max - COLUMN_COUNT_RANGE.min + 1 }, (_, i) => (
-                      <option key={COLUMN_COUNT_RANGE.min + i} value={COLUMN_COUNT_RANGE.min + i}>
-                        {COLUMN_COUNT_RANGE.min + i}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <label>서술 수:</label>
-                  <select
-                    value={(currentQuestion?.props as SideBySideQuestionProps).optionCount}
-                    onChange={(e) => updateRowCount(state.selectedQuestionId!, parseInt(e.target.value))}
-                    className="border border-gray-300 rounded px-2 py-1"
-                  >
-                    {Array.from({ length: OPTION_COUNT_RANGE.max - OPTION_COUNT_RANGE.min + 1 }, (_, i) => (
-                      <option key={OPTION_COUNT_RANGE.min + i} value={OPTION_COUNT_RANGE.min + i}>
-                        {OPTION_COUNT_RANGE.min + i}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* 열별 서술 입력 */}
-              <div className="space-y-4">
-                {Array.from({ length: (currentQuestion?.props as SideBySideQuestionProps).optionCount }).map((_, optionIndex) => (
-                  <div key={optionIndex}>
-
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
       
@@ -588,33 +596,97 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
             </div>
 
             <div className="space-y-6">
-              {state.questions.map((q) => (
-                <div key={q.id} className="border-b pb-6 last:border-0">
-                  <div className="font-semibold mb-4">{q.text}</div>
-                  {q.type === QuestionType.MULTIPLE_CHOICE ? (
-                    <div className="space-y-3">
-                      {q.props && (q.props as MultipleChoiceQuestionProps).options?.map((opt) => (
-                        <label key={opt.id} className="flex items-center">
+              {state.selectedQuestionId ? (
+                state.questions
+                  .filter(q => q.id === state.selectedQuestionId)
+                  .map((q) => (
+                    <div key={q.id} className="border-b pb-6 last:border-0">
+                      <div className="font-semibold mb-4">{q.text}</div>
+                      {q.type === QuestionType.MULTIPLE_CHOICE ? (
+                        <div className="space-y-3">
+                          {q.props && (q.props as MultipleChoiceQuestionProps).options?.map((opt) => (
+                            <label key={opt.id} className="flex items-center">
+                              <input
+                                type="radio"
+                                name={`preview_${q.id}`}
+                                className="mr-3"
+                              />
+                              <span className="text-gray-700">{opt.text}</span>
+                            </label>
+                          ))}
+                        </div>
+                      ) : q.type === QuestionType.TEXT_ENTRY ? (
+                        <div className="mt-4">
                           <input
-                            type="radio"
-                            name={`preview_${q.id}`}
-                            className="mr-3"
+                            type="text"
+                            className="w-full p-3 border rounded-lg"
+                            placeholder="답변을 입력해주세요."
                           />
-                          <span className="text-gray-700">{opt.text}</span>
-                        </label>
-                      ))}
+                        </div>
+                      ) : q.type === QuestionType.SIDE_BY_SIDE ? (
+                        <div className="space-y-4">
+                          {q.props && (q.props as SideBySideQuestionProps).sideBySideOptions?.map((opt, optIndex) => (
+                            <div key={opt.id} className="space-y-3">
+                              <div className="font-semibold mb-2">{opt.text}</div>
+                              <div className="overflow-x-auto">
+                                <table className="min-w-full">
+                                  <thead>
+                                    <tr>
+                                      <th className="border-r border-gray-300">서술</th>
+                                      {opt.columns?.map((column, columnIndex) => (
+                                        <th key={columnIndex} className="border-r border-gray-300">
+                                          {column.title}
+                                        </th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      <td className="border-r border-gray-300">
+                                        <div className="flex flex-col gap-2">
+                                          {Array.from({ length: opt.descriptionCount || 0 }).map((_, rowIndex) => (
+                                            <div key={rowIndex} className="flex items-center">
+                                              <input
+                                                type="radio"
+                                                name={`preview_${q.id}_${optIndex}`}
+                                                className="mr-2"
+                                              />
+                                              <span>서술 {rowIndex + 1}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </td>
+                                      {opt.columns?.map((column, columnIndex) => (
+                                        <td key={columnIndex} className="border-r border-gray-300">
+                                          <div className="flex flex-col gap-2">
+                                            {column.answers?.map((answer, answerIndex) => (
+                                              <div key={answerIndex} className="flex justify-center">
+                                                <input
+                                                  type="radio"
+                                                  name={`preview_${q.id}_${optIndex}_${columnIndex}_${answerIndex}`}
+                                                  className="mr-2"
+                                                />
+                                                <span className="text-gray-700">{answer}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
-                  ) : (
-                    <div className="mt-4">
-                      <input
-                        type="text"
-                        className="w-full p-3 border rounded-lg"
-                        placeholder="답변을 입력해주세요."
-                      />
-                    </div>
-                  )}
+                  ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">질문을 선택해주세요.</p>
                 </div>
-              ))}
+              )}
             </div>
 
             <div className="mt-8 flex justify-end">
