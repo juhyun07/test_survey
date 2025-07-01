@@ -461,8 +461,8 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
                     <table className="w-full border-collapse mx-auto">
                       <thead>
                         <tr>
-                          <th className="w-1/3 border p-2">서술</th>
-                          <th className="w-2/3 border p-2">열 선택</th>
+                          <th className="w-1/4 border p-2">서술</th>
+                          <th className="w-3/4 border p-2">열 선택</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -478,9 +478,8 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
                               />
                             </td>
                             <td className="p-2">
-                              <div className="flex justify-center">
-                                <div className={`grid grid-cols-${opt.columns.length} gap-4`}>
-                                  {opt.columns.map((column: SideBySideOption['columns'][number], columnIndex: number) => (
+                              <div className="flex justify-center gap-3">
+                                {opt.columns.map((column: SideBySideOption['columns'][number], columnIndex: number) => (
                                     <div key={columnIndex} className="border border-gray-300 rounded p-2">
                                       <div className="flex justify-between mb-2">
                                         <button
@@ -528,7 +527,7 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
                                           }}
                                         />
                                       </div>
-                                      <div className="flex flex-wrap gap-2">
+                                      <div className="flex flex-wrap justify-center gap-2">
                                         {(column.answers || []).map((answer: string, answerIndex: number) => (
                                           <div key={answerIndex} className="flex flex-col w-12">
                                             <input
@@ -559,7 +558,7 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
                                       </div>
                                     </div>
                                   ))}
-                                </div>
+                                
                               </div>
                             </td>
                           </tr>
