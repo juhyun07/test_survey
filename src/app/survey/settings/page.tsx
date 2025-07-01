@@ -9,7 +9,7 @@ export default function SurveySettingsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-9xl mx-auto">
       <h1 className="text-2xl font-bold p-3">설문조사 설정</h1>
       <SurveyEditor 
         onSave={handleSave}

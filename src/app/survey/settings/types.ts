@@ -53,8 +53,8 @@ export interface Question {
   text: string;
   required?: boolean;
   exportTag?: string;
+  options?: MultipleChoiceOption[];
   optionCount?: number;
-  // 각 질문 유형별 추가 프로퍼티
   props: QuestionPropsMap[QuestionType];
 }
 

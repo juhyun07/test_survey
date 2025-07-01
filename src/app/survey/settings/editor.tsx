@@ -103,8 +103,36 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
     }));
   };
 
-  // 선택항목 수 업데이트 함수
-  const updateOptionCount = (questionId: string, newOptionCount: number) => {
+  // 복수선택 항목 수 업데이트 함수
+  const updateOptionCount = (questionId: string, count: number) => {
+    const currentQuestion = state.questions.find(q => q.id === questionId);
+    if (!currentQuestion || currentQuestion.type !== QuestionType.MULTIPLE_CHOICE) return;
+
+    const existingOptions = currentQuestion.options || [];
+    const newOptions = Array.from({ length: Math.max(1, Math.min(5, count)) }, (_, i) => {
+      const existingOption = existingOptions[i];
+      return {
+        id: `opt${questionId}_${i}`,
+        text: existingOption?.text || ''
+      };
+    });
+
+    // 타입 안전하게 업데이트
+    const newQuestions = state.questions.map(q =>
+      q.id === questionId 
+        ? { 
+            ...q, 
+            optionCount: Math.max(1, Math.min(5, count)),
+            options: newOptions,
+            props: { ...q.props, optionCount: Math.max(1, Math.min(5, count)) }
+          } 
+        : q
+    );
+
+    setState({ ...state, questions: newQuestions });
+  };
+
+  const updateRowCount = (questionId: string, newOptionCount: number) => {
     const newQuestions = [...state.questions];
     const questionIndex = newQuestions.findIndex(q => q.id === questionId);
     if (questionIndex !== -1) {
@@ -217,7 +245,7 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
   return (
     <div className="flex h-screen">
       {/* 왼쪽 패널 */}
-      <div className="w-1/4 p-4 border-r px-5">
+      <div className="w-1/6 p-4 border-r px-5">
         <div className="mb-4">
           <label className="block mb-2">질문 유형</label>
           <select
@@ -325,7 +353,7 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
                   <label>서술 수:</label>
                   <select
                     value={(currentQuestion?.props as SideBySideQuestionProps).optionCount}
-                    onChange={(e) => updateOptionCount(state.selectedQuestionId!, parseInt(e.target.value))}
+                    onChange={(e) => updateRowCount(state.selectedQuestionId!, parseInt(e.target.value))}
                     className="border border-gray-300 rounded px-2 py-1"
                   >
                     {Array.from({ length: OPTION_COUNT_RANGE.max - OPTION_COUNT_RANGE.min + 1 }, (_, i) => (
@@ -400,8 +428,8 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
               {currentQuestion?.type === QuestionType.MULTIPLE_CHOICE ? (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    {(currentQuestion?.props as MultipleChoiceQuestionProps).options?.map((opt) => (
-                      <div key={opt.id} className="flex items-center p-1">
+                    {Array.from({ length: (currentQuestion?.props as MultipleChoiceQuestionProps).optionCount }).map((_, index) => (
+                      <div key={index} className="flex items-center p-1">
                         <input
                           type="radio"
                           name={`question_${state.selectedQuestionId}`}
@@ -411,8 +439,8 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
                           type="text"
                           className={`flex-1 ${getInputBorderClass(false)}`}
                           placeholder="선택항목을 작성해주세요."
-                          value={opt.text}
-                          onChange={(e) => updateOption(state.selectedQuestionId!, opt.id, e.target.value)}
+                          value={(currentQuestion?.props as MultipleChoiceQuestionProps).options?.[index]?.text}
+                          onChange={(e) => updateOption(state.selectedQuestionId!, (currentQuestion?.props as MultipleChoiceQuestionProps).options?.[index]?.id, e.target.value)}
                         />
                       </div>
                     ))}
@@ -420,9 +448,10 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
                 </div>
               ) : currentQuestion?.type === QuestionType.TEXT_ENTRY ? (
                 <div className="mt-1">
-                  <input
-                    type="text"
-                    className={`w-full p-2 ${getInputBorderClass(false)}`}
+                  <textarea
+                    rows={4}
+                    maxLength={(currentQuestion?.props as TextEntryQuestionProps).maxLength || 100}
+                    className={`w-full p-2 ${getInputBorderClass(false)} border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none`}
                     placeholder={(currentQuestion?.props as TextEntryQuestionProps).placeholder || "답변을 입력해주세요."}
                   />
                 </div>
@@ -486,7 +515,7 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
                                       <div className="mb-2">
                                         <input
                                           type="text"
-                                          className={`w-full ${getInputBorderClass(false)}`}
+                                          className={`w-full ${getInputBorderClass(false)} text-center`}
                                           placeholder={`열 ${columnIndex + 1} 제목`}
                                           value={column.title}
                                           onChange={(e) => {
@@ -499,13 +528,13 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
                                           }}
                                         />
                                       </div>
-                                      {(column.answers || []).map((answer: string, answerIndex: number) => (
-                                        <div key={answerIndex} className="flex flex-col space-y-1">
-                                          <div className="flex items-center">
-                                            <span className="mr-2">답 {answerIndex + 1}</span>
+                                      <div className="flex flex-wrap gap-2">
+                                        {(column.answers || []).map((answer: string, answerIndex: number) => (
+                                          <div key={answerIndex} className="flex flex-col w-12">
                                             <input
                                               type="text"
-                                              className={`w-full ${getInputBorderClass(false)}`}
+                                              className={`w-full ${getInputBorderClass(false)} text-center`}
+                                              placeholder={`답 ${answerIndex + 1}`}
                                               value={answer}
                                               onChange={(e) => {
                                                 const newColumns = [...opt.columns];
@@ -518,97 +547,18 @@ export default function SurveyEditor({ onSave }: SurveyEditorProps): JSX.Element
                                                 updateSideBySideOption(state.selectedQuestionId!, optIndex, { columns: newColumns });
                                               }}
                                             />
+                                            <div className="flex justify-center mt-1">
+                                              <input
+                                                type="radio"
+                                                name={`RG_QID8_${optIndex}_${columnIndex}`}
+                                                className="mr-2"
+                                              />
+                                            </div>
                                           </div>
-                                          <div className="flex justify-center">
-                                            <input
-                                              type="radio"
-                                              name={`RG_QID8_${optIndex}_${columnIndex}`}
-                                              className="mr-2"
-                                            />
-                                          </div>
-                                        </div>
-                                      ))}
+                                        ))}
+                                      </div>
                                     </div>
                                   ))}
-                                    {/* <div key={columnIndex} className="border border-gray-300 rounded p-2">
-                                      <div className="flex justify-between mb-2">
-                                        <button
-                                          onClick={() => {
-                                            const newColumns = [...opt.columns];
-                                            newColumns[columnIndex] = {
-                                              ...column,
-                                              answers: [...column.answers, '']
-                                            };
-                                            updateSideBySideOption(state.selectedQuestionId!, optIndex, { columns: newColumns });
-                                          }}
-                                          className="text-sm text-blue-500 hover:text-blue-700"
-                                        >
-                                          열 답 추가
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            if (column.answers.length > 1) {
-                                              const newColumns = [...opt.columns];
-                                              newColumns[columnIndex] = {
-                                                ...column,
-                                                answers: column.answers.slice(0, -1)
-                                              };
-                                              updateSideBySideOption(state.selectedQuestionId!, optIndex, { columns: newColumns });
-                                            }
-                                          }}
-                                          className="text-sm text-red-500 hover:text-red-700"
-                                        >
-                                          열 답 제거
-                                        </button>
-                                      </div>
-                                      <div className="mb-2">
-                                        <input
-                                          type="text"
-                                          className={`w-full ${getInputBorderClass(false)}`}
-                                          placeholder={`열 ${columnIndex + 1} 제목`}
-                                          value={column.title}
-                                          onChange={(e) => {
-                                            const newColumns = [...opt.columns];
-                                            newColumns[columnIndex] = {
-                                              ...column,
-                                              title: e.target.value
-                                            };
-                                            updateSideBySideOption(state.selectedQuestionId!, optIndex, { columns: newColumns });
-                                          }}
-                                        />
-                                      </div>
-                                      {column.answers.map((answer, answerIndex) => (
-                                        <div key={answerIndex} className="flex flex-col space-y-1">
-                                          <div className="flex items-center">
-                                            <span className="mr-2">답 {answerIndex + 1}</span>
-                                            <input
-                                              type="text"
-                                              className={`w-full ${getInputBorderClass(false)}`}
-                                              value={answer}
-                                              onChange={(e) => {
-                                                const newColumns = [...opt.columns];
-                                                const newAnswers = [...column.answers];
-                                                newAnswers[answerIndex] = e.target.value;
-                                                newColumns[columnIndex] = {
-                                                  ...column,
-                                                  answers: newAnswers
-                                                };
-                                                updateSideBySideOption(state.selectedQuestionId!, optIndex, { columns: newColumns });
-                                              }}
-                                            />
-                                          </div>
-                                          <div className="flex items-center justify-center">
-                                            <input
-                                              type="radio"
-                                              name={`RG_QID8_${optIndex}_${columnIndex}`}
-                                              className="mr-2"
-                                            />
-                                            <span className="text-sm">답 {answerIndex + 1}</span>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ))} */}
                                 </div>
                               </div>
                             </td>
