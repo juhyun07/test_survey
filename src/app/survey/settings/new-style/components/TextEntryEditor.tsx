@@ -1,11 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 
-export const TextEntryEditor: React.FC = () => {
+interface TextEntryEditorProps {}
+
+interface TextEntryEditorRef {
+  getState: () => {
+    question: string;
+    placeholder: string;
+    isRequired: boolean;
+    maxLength: number;
+  };
+}
+
+export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorProps>((props, ref) => {
   const [question, setQuestion] = useState<string>("");
   const [placeholder, setPlaceholder] = useState<string>("");
   const [isRequired, setIsRequired] = useState<boolean>(false);
   const [isLongText, setIsLongText] = useState<boolean>(false);
   const [maxLength, setMaxLength] = useState<number>(100);
+
+  // 외부에서 상태를 가져올 수 있도록 expose
+  useImperativeHandle(ref, () => ({
+    getState: () => ({
+      question,
+      placeholder,
+      isRequired,
+      maxLength,
+    }),
+  }));
 
   return (
     <div className="space-y-6">
@@ -103,4 +124,4 @@ export const TextEntryEditor: React.FC = () => {
       </div>
     </div>
   );
-};
+});

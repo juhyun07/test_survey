@@ -10,10 +10,23 @@ export interface MultipleChoiceQuestionProps {
   optionCount: number;
 }
 
+export interface SubColumn {
+  id: string;
+  label: string;
+}
+
+export interface ColumnGroup {
+  id: string;
+  label: string;
+  subColumns: SubColumn[];
+}
+
 export interface SideBySideQuestionProps {
   sideBySideOptions: SideBySideOption[];
   optionCount: number;
   columnCount: number;
+  subColumnCounts: number[];
+  columns: ColumnGroup[];
 }
 
 // 열 수와 서술 수의 범위
@@ -41,11 +54,14 @@ export interface MultipleChoiceOption {
 export interface SideBySideOption {
   id: string;
   text: string;
-  columns: {
+  descriptionCount: number;
+  columns: Array<{
     title: string;
-    answers: string[];
-  }[];
-  descriptionCount: number;  // 서술 수
+    answers: Array<{
+      id: string;
+      text: string;
+    }>;
+  }>;
 }
 
 export interface Question {

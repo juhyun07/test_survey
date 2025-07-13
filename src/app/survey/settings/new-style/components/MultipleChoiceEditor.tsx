@@ -1,24 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 
-export const MultipleChoiceEditor: React.FC = () => {
-  const [options, setOptions] = useState<string[]>([""]);
+interface Option {
+  id: string;
+  text: string;
+}
+
+interface MultipleChoiceEditorProps {}
+
+interface MultipleChoiceEditorRef {
+  getState: () => {
+    options: { id: string; text: string }[];
+    optionCount: number;
+    question: string;
+    isRequired: boolean;
+  };
+}
+
+export const MultipleChoiceEditor = forwardRef<MultipleChoiceEditorRef, MultipleChoiceEditorProps>((props, ref) => {
+  const [options, setOptions] = useState<Option[]>([
+    { id: '1', text: '옵션 1' },
+    { id: '2', text: '옵션 2' },
+  ]);
+  const [optionCount, setOptionCount] = useState(2);
   const [question, setQuestion] = useState<string>("");
   const [isRequired, setIsRequired] = useState<boolean>(false);
 
+  useImperativeHandle(ref, () => ({
+    getState: () => ({
+      options,
+      optionCount,
+      question,
+      isRequired,
+    }),
+  }));
+
   const addOption = () => {
-    setOptions([...options, ""]);
+    const newId = (options.length + 1).toString();
+    setOptions([...options, { id: newId, text: `옵션 ${newId}` }]);
+    setOptionCount(optionCount + 1);
   };
 
-  const updateOption = (index: number, value: string) => {
-    const newOptions = [...options];
-    newOptions[index] = value;
-    setOptions(newOptions);
+  const updateOption = (id: string, text: string) => {
+    setOptions(options.map(option => 
+      option.id === id ? { ...option, text } : option
+    ));
   };
 
-  const removeOption = (index: number) => {
+  const removeOption = (id: string) => {
     if (options.length > 1) {
-      const newOptions = options.filter((_, i) => i !== index);
-      setOptions(newOptions);
+      setOptions(options.filter(option => option.id !== id));
+      setOptionCount(optionCount - 1);
     }
   };
 
@@ -47,8 +78,8 @@ export const MultipleChoiceEditor: React.FC = () => {
         </div>
         
         <div className="space-y-2">
-          {options.map((option, index) => (
-            <div key={index} className="flex items-center">
+          {options.map((option) => (
+            <div key={option.id} className="flex items-center">
               <input
                 type="radio"
                 disabled
@@ -57,13 +88,14 @@ export const MultipleChoiceEditor: React.FC = () => {
               <input
                 type="text"
                 className="ml-2 flex-1 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                value={option}
-                onChange={(e) => updateOption(index, e.target.value)}
-                placeholder={`선택지 ${index + 1}`}
+                value={option.text}
+                onChange={(e) => updateOption(option.id, e.target.value)}
+                placeholder="선택지"
               />
               {options.length > 1 && (
                 <button
-                  onClick={() => removeOption(index)}
+                  type="button"
+                  onClick={() => removeOption(option.id)}
                   className="ml-2 text-red-500 hover:text-red-700"
                 >
                   ×
@@ -88,4 +120,4 @@ export const MultipleChoiceEditor: React.FC = () => {
       </div>
     </div>
   );
-};
+});

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 
 type MatrixRow = {
   id: string;
@@ -14,7 +14,33 @@ type MatrixColumn = {
   }>;
 };
 
-export const SideBySideEditor: React.FC = () => {
+interface SideBySideEditorProps {}
+
+interface SideBySideEditorRef {
+  getState: () => {
+    question: string;
+    isRequired: boolean;
+    rows: MatrixRow[];  // 모든 행 데이터
+    columns: MatrixColumn[];  // 모든 컬럼 데이터
+    sideBySideOptions: Array<{
+      id: string;
+      text: string;
+      descriptionCount: number;
+      columns: Array<{
+        title: string;
+        answers: Array<{
+          id: string;
+          text: string;
+        }>;
+      }>;
+    }>;
+    optionCount: number;
+    columnCount: number;
+    subColumnCounts: number[];
+  };
+}
+
+export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditorProps>((props, ref) => {
   const [question, setQuestion] = useState<string>("");
   const [isRequired, setIsRequired] = useState<boolean>(false);
   const [rows, setRows] = useState<MatrixRow[]>([
@@ -132,6 +158,41 @@ export const SideBySideEditor: React.FC = () => {
       return column;
     }));
   };
+
+  // 외부에서 상태를 가져올 수 있도록 expose
+  useImperativeHandle(ref, () => ({
+    getState: () => {
+      const sideBySideOptions = rows.map(row => ({
+        id: row.id,
+        text: row.label,
+        descriptionCount: 0, // 이 값은 실제로는 상태로 관리해야 할 수 있음
+        columns: columns.map(col => ({
+          title: col.label,
+          answers: col.subColumns.map(sc => ({
+            id: sc.id,
+            text: sc.label
+          }))
+        }))
+      }));
+
+      // 각 컬럼 그룹의 서브 컬럼 수 계산
+      const subColumnCounts = columns.map(col => col.subColumns.length);
+
+      return {
+        question,
+        isRequired,
+        rows: [...rows],
+        columns: columns.map(col => ({
+          ...col,
+          subColumns: [...col.subColumns]
+        })),
+        sideBySideOptions,
+        optionCount: rows.length,
+        columnCount: columns.length,
+        subColumnCounts,
+      };
+    },
+  }));
 
   return (
     <div className="space-y-6">
@@ -368,4 +429,4 @@ export const SideBySideEditor: React.FC = () => {
       </div>
     </div>
   );
-};
+});
