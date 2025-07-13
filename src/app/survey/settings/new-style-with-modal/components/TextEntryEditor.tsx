@@ -1,15 +1,6 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 
-interface TextEntryEditorProps {
-  question?: string;
-  isRequired?: boolean;
-  maxLength?: number;
-  placeholder?: string;
-  onQuestionChange?: (text: string) => void;
-  onRequiredChange?: (required: boolean) => void;
-  onMaxLengthChange?: (maxLength: number | undefined) => void;
-  onPlaceholderChange?: (placeholder: string | undefined) => void;
-}
+interface TextEntryEditorProps {}
 
 interface TextEntryEditorRef {
   getState: () => {
@@ -20,35 +11,20 @@ interface TextEntryEditorRef {
   };
 }
 
-export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorProps>(({
-  question: initialQuestion = '',
-  isRequired: initialIsRequired = false,
-  maxLength: initialMaxLength,
-  placeholder: initialPlaceholder,
-  onQuestionChange,
-  onRequiredChange,
-  onMaxLengthChange,
-  onPlaceholderChange,
-}, ref) => {
-  const [question, setQuestion] = useState<string>(initialQuestion);
-  const [isRequired, setIsRequired] = useState<boolean>(initialIsRequired);
-  const [maxLength, setMaxLength] = useState<number | undefined>(initialMaxLength);
-  const [placeholder, setPlaceholder] = useState<string | undefined>(initialPlaceholder);
+export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorProps>((props, ref) => {
+  const [question, setQuestion] = useState<string>("");
+  const [placeholder, setPlaceholder] = useState<string>("");
+  const [isRequired, setIsRequired] = useState<boolean>(false);
   const [isLongText, setIsLongText] = useState<boolean>(false);
+  const [maxLength, setMaxLength] = useState<number>(100);
 
-  useEffect(() => {
-    setQuestion(initialQuestion);
-    setIsRequired(initialIsRequired);
-    setMaxLength(initialMaxLength);
-    setPlaceholder(initialPlaceholder);
-  }, [initialQuestion, initialIsRequired, initialMaxLength, initialPlaceholder]);
-
+  // 외부에서 상태를 가져올 수 있도록 expose
   useImperativeHandle(ref, () => ({
     getState: () => ({
       question,
-      placeholder: placeholder || '',
+      placeholder,
       isRequired,
-      maxLength: maxLength || 100,
+      maxLength,
     }),
   }));
 
@@ -60,11 +36,7 @@ export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorPro
           type="text"
           className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
           value={question}
-          onChange={(e) => {
-            const newValue = e.target.value;
-            setQuestion(newValue);
-            onQuestionChange?.(newValue);
-          }}
+          onChange={(e) => setQuestion(e.target.value)}
           placeholder="질문을 입력하세요"
         />
       </div>
@@ -76,12 +48,8 @@ export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorPro
         <input
           type="text"
           className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-          value={placeholder || ''}
-          onChange={(e) => {
-            const newValue = e.target.value || undefined;
-            setPlaceholder(newValue);
-            onPlaceholderChange?.(newValue);
-          }}
+          value={placeholder}
+          onChange={(e) => setPlaceholder(e.target.value)}
           placeholder="예: 100자 이내로 입력해주세요"
         />
       </div>
@@ -105,11 +73,7 @@ export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorPro
             type="checkbox"
             id="required"
             checked={isRequired}
-            onChange={(e) => {
-              const newValue = e.target.checked;
-              setIsRequired(newValue);
-              onRequiredChange?.(newValue);
-            }}
+            onChange={(e) => setIsRequired(e.target.checked)}
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
           <label htmlFor="required" className="ml-2 block text-sm text-gray-700">
@@ -126,12 +90,8 @@ export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorPro
             id="maxLength"
             min="1"
             max="10000"
-            value={maxLength || ''}
-            onChange={(e) => {
-              const newValue = e.target.value ? parseInt(e.target.value) : undefined;
-              setMaxLength(newValue);
-              onMaxLengthChange?.(newValue);
-            }}
+            value={maxLength}
+            onChange={(e) => setMaxLength(Number(e.target.value))}
             className="w-24 p-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
           />
         </div>

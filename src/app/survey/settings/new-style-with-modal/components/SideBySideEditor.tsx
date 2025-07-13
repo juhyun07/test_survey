@@ -1,45 +1,20 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 
-interface Answer {
-  id: string;
-  text: string;
-  label?: string;
-}
-
-interface SubColumn {
+type MatrixRow = {
   id: string;
   label: string;
-  answers?: Answer[];
-}
+};
 
-interface MatrixRow {
+type MatrixColumn = {
   id: string;
   label: string;
-  columns?: Array<{
-    title: string;
-    answers: Answer[];
+  subColumns: Array<{
+    id: string;
+    label: string;
   }>;
-}
+};
 
-interface MatrixColumn {
-  id: string;
-  label: string;
-  subColumns: SubColumn[];
-}
-
-interface SideBySideEditorProps {
-  question?: string;
-  isRequired?: boolean;
-  rows?: MatrixRow[];
-  columns?: MatrixColumn[];
-  onQuestionChange?: (text: string) => void;
-  onRequiredChange?: (required: boolean) => void;
-  onRowsChange?: (rows: MatrixRow[]) => void;
-  onColumnsChange?: (columns: MatrixColumn[]) => void;
-  onOptionCountChange?: (count: number) => void;
-  onColumnCountChange?: (count: number) => void;
-  onSubColumnCountsChange?: (counts: number[]) => void;
-}
+interface SideBySideEditorProps {}
 
 interface SideBySideEditorRef {
   getState: () => {
@@ -65,184 +40,123 @@ interface SideBySideEditorRef {
   };
 }
 
-export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditorProps>(({
-  question: initialQuestion = '',
-  isRequired: initialIsRequired = false,
-  rows: initialRows = [
+export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditorProps>((props, ref) => {
+  const [question, setQuestion] = useState<string>("");
+  const [isRequired, setIsRequired] = useState<boolean>(false);
+  const [rows, setRows] = useState<MatrixRow[]>([
     { id: 'r1', label: '항목 1' },
     { id: 'r2', label: '항목 2' },
-  ],
-  columns: initialColumns = [
+  ]);
+  
+  const [columns, setColumns] = useState<MatrixColumn[]>([
     {
-      id: 'c1',
+      id: 'col1',
       label: '열 1',
       subColumns: [
-        { id: 'sc1', label: '하위 1-1' },
-        { id: 'sc2', label: '하위 1-2' },
-      ],
-    },
-    {
-      id: 'c2',
-      label: '열 2',
-      subColumns: [
-        { id: 'sc3', label: '하위 2-1' },
-        { id: 'sc4', label: '하위 2-2' },
-      ],
-    },
-  ],
-  onQuestionChange,
-  onRequiredChange,
-  onRowsChange,
-  onColumnsChange,
-  onOptionCountChange,
-  onColumnCountChange,
-  onSubColumnCountsChange,
-}, ref) => {
-  const [question, setQuestion] = useState<string>(initialQuestion);
-  const [isRequired, setIsRequired] = useState<boolean>(initialIsRequired);
-  const [rows, setRows] = useState<MatrixRow[]>(initialRows);
-  const [columns, setColumns] = useState<MatrixColumn[]>(initialColumns);
-
-  // Update local state when props change
-  useEffect(() => {
-    setQuestion(initialQuestion);
-    setIsRequired(initialIsRequired);
-    setRows(initialRows);
-    setColumns(initialColumns);
-  }, [initialQuestion, initialIsRequired, initialRows, initialColumns]);
+        { id: 'c1', label: '옵션 1' },
+      ]
+    }
+  ]);
 
   // 행 추가
   const addRow = () => {
-    const newId = `row-${Date.now()}`;
-    const newRow = { id: newId, label: `항목 ${rows.length + 1}` };
-    const newRows = [...rows, newRow];
-    setRows(newRows);
-    onRowsChange?.(newRows);
-    onOptionCountChange?.(newRows.length);
+    const newId = `r${Date.now()}`;
+    setRows([...rows, { id: newId, label: `항목 ${rows.length + 1}` }]);
   };
 
   // 행 업데이트
   const updateRow = (id: string, newLabel: string) => {
-    const newRows = rows.map(row => 
+    setRows(rows.map(row => 
       row.id === id ? { ...row, label: newLabel } : row
-    );
-    setRows(newRows);
-    onRowsChange?.(newRows);
-    
-    // Update the row label in the sideBySideOptions
-    const newSideBySideOptions = newRows.map(row => ({
-      ...row,
-      text: row.label
-    }));
-    
-    // Update parent state if needed
-    if (onOptionCountChange) {
-      onOptionCountChange(newRows.length);
-    }
+    ));
   };
 
   // 행 삭제
   const removeRow = (id: string) => {
-    if (rows.length <= 1) return; // 최소 1개는 유지
-    const newRows = rows.filter(row => row.id !== id);
-    setRows(newRows);
-    onRowsChange?.(newRows);
-    onOptionCountChange?.(newRows.length);
+    if (rows.length > 1) {
+      setRows(rows.filter(row => row.id !== id));
+    }
   };
 
   // 열 그룹 추가
   const addColumnGroup = () => {
-    const newId = `col-${Date.now()}`;
+    const newId = `col${Date.now()}`;
     const newColumn: MatrixColumn = {
       id: newId,
       label: `열 ${columns.length + 1}`,
       subColumns: [
         { id: `${newId}-1`, label: '옵션 1' },
-        { id: `${newId}-2`, label: '옵션 2' },
-      ],
+      ]
     };
-    
-    const newColumns = [...columns, newColumn];
-    setColumns(newColumns);
-    onColumnsChange?.(newColumns);
-    onColumnCountChange?.(newColumns.length);
-    onSubColumnCountsChange?.(newColumns.map(col => col.subColumns.length));
+    setColumns([...columns, newColumn]);
   };
 
   // 열 그룹 레이블 업데이트
   const updateColumnGroup = (id: string, newLabel: string) => {
-    const newColumns = columns.map(column => 
+    setColumns(columns.map(column => 
       column.id === id ? { ...column, label: newLabel } : column
-    );
-    setColumns(newColumns);
-    onColumnsChange?.(newColumns);
+    ));
   };
 
   // 열 그룹 삭제
   const removeColumnGroup = (id: string) => {
-    if (columns.length <= 1) return; // 최소 1개는 유지
-    const newColumns = columns.filter(column => column.id !== id);
-    setColumns(newColumns);
-    onColumnsChange?.(newColumns);
-    onColumnCountChange?.(newColumns.length);
-    onSubColumnCountsChange?.(newColumns.map(col => col.subColumns.length));
+    if (columns.length > 1) {
+      setColumns(columns.filter(column => column.id !== id));
+    }
   };
 
   // 서브 컬럼 추가
   const addSubColumn = (columnId: string) => {
-    const column = columns.find(col => col.id === columnId);
-    if (!column) return;
-
-    const newSubColumn = {
-      id: `${columnId}-${column.subColumns.length + 1}`,
-      label: `옵션 ${column.subColumns.length + 1}`,
-    };
-
-    const newColumns = columns.map(col => 
-      col.id === columnId 
-        ? { ...col, subColumns: [...col.subColumns, newSubColumn] }
-        : col
-    );
-    
-    setColumns(newColumns);
-    onColumnsChange?.(newColumns);
-    onSubColumnCountsChange?.(newColumns.map(col => col.subColumns.length));
+    setColumns(columns.map(column => {
+      if (column.id === columnId) {
+        const newSubColumnId = `${columnId}-${Date.now()}`;
+        return {
+          ...column,
+          subColumns: [
+            ...column.subColumns,
+            { id: newSubColumnId, label: `옵션 ${column.subColumns.length + 1}` }
+          ]
+        };
+      }
+      return column;
+    }));
   };
 
   // 서브 컬럼 삭제
   const removeSubColumn = (columnId: string, subColumnId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     
-    const column = columns.find(col => col.id === columnId);
-    if (!column || column.subColumns.length <= 1) return; // 최소 1개는 유지
-    
-    const newColumns = columns.map(col => 
-      col.id === columnId
-        ? { 
-            ...col, 
-            subColumns: col.subColumns.filter(sc => sc.id !== subColumnId) 
-          }
-        : col
-    );
-    
-    setColumns(newColumns);
-    onColumnsChange?.(newColumns);
-    onSubColumnCountsChange?.(newColumns.map(col => col.subColumns.length));
+    setColumns(prevColumns => {
+      const newColumns = prevColumns.map(column => {
+        if (column.id === columnId) {
+          const filtered = column.subColumns.filter(sc => sc.id !== subColumnId);
+          // 마지막 서브 컬럼은 삭제하지 않음
+          if (filtered.length === 0) return column;
+          return {
+            ...column,
+            subColumns: filtered
+          };
+        }
+        return column;
+      });
+      return newColumns;
+    });
   };
 
   // 서브 컬럼 레이블 업데이트
   const updateSubColumn = (columnId: string, subColumnId: string, newLabel: string) => {
-    const newColumns = columns.map(column => {
+    setColumns(columns.map(column => {
       if (column.id === columnId) {
-        const newSubColumns = column.subColumns.map(subCol =>
-          subCol.id === subColumnId ? { ...subCol, label: newLabel } : subCol
-        );
-        return { ...column, subColumns: newSubColumns };
+        return {
+          ...column,
+          subColumns: column.subColumns.map(sc => 
+            sc.id === subColumnId ? { ...sc, label: newLabel } : sc
+          )
+        };
       }
       return column;
-    });
-    setColumns(newColumns);
-    onColumnsChange?.(newColumns);
+    }));
   };
 
   // 외부에서 상태를 가져올 수 있도록 expose
@@ -297,11 +211,7 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium text-gray-700">행 관리</span>
           <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              removeRow(rows[rows.length - 1]?.id);
-            }}
+            onClick={() => removeRow(rows[rows.length - 1]?.id)}
             disabled={rows.length <= 1}
             className="p-1 rounded-full bg-red-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             title="마지막 행 삭제"
@@ -311,11 +221,7 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
             </svg>
           </button>
           <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              addRow();
-            }}
+            onClick={addRow}
             className="p-1 rounded-full bg-blue-500 text-white"
             title="행 추가"
           >
@@ -328,11 +234,7 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium text-gray-700">열 그룹 관리</span>
           <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              removeColumnGroup(columns[columns.length - 1]?.id);
-            }}
+            onClick={() => removeColumnGroup(columns[columns.length - 1]?.id)}
             disabled={columns.length <= 1}
             className="p-1 rounded-full bg-red-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             title="마지막 열 그룹 삭제"
@@ -342,11 +244,7 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
             </svg>
           </button>
           <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              addColumnGroup();
-            }}
+            onClick={addColumnGroup}
             className="p-1 rounded-full bg-blue-500 text-white"
             title="열 그룹 추가"
           >
@@ -385,11 +283,7 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
                       <div className="flex items-center space-x-1">
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            addSubColumn(column.id);
-                          }}
+                          onClick={() => addSubColumn(column.id)}
                           className="p-0.5 text-xs bg-green-500 text-white rounded hover:bg-green-600"
                           title="서브 컬럼 추가"
                         >

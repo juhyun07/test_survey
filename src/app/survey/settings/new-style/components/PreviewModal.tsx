@@ -6,34 +6,42 @@ import { Question, QuestionType, MultipleChoiceOption, SideBySideOption, Multipl
 interface PreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  question: Question | null;
+  questions: Question[];
 }
 
-export function PreviewModal({ isOpen, onClose, question }: PreviewModalProps) {
-  if (!isOpen || !question) return null;
+export function PreviewModal({ isOpen, onClose, questions }: PreviewModalProps) {
+  if (!isOpen) return null;
 
-  const renderQuestionPreview = () => {
+  const renderQuestionPreview = (question: Question, index: number) => {
     const props = question.props;
     
+    // 질문 번호 (Q1, Q2, ...)
+    const questionNumber = `Q${index + 1}`;
+    
     switch (question.type) {
-      case QuestionType.MULTIPLE_CHOICE: {
-        const mcProps = props as MultipleChoiceQuestionProps;
+      case QuestionType.MULTIPLE_CHOICE:
+      case QuestionType.MULTIPLE_CHOICE_MULTIPLE: {
+        // 현재 질문의 옵션을 그대로 사용
+        const options = question.options || [];
+        const isMultiple = question.type === QuestionType.MULTIPLE_CHOICE_MULTIPLE;
+        
         return (
           <div className="space-y-2">
-            <h3 className="text-lg font-medium">미리보기: 객관식 질문</h3>
-            <p className="text-gray-700">{question.text}</p>
-            <div className="space-y-2 mt-4">
-              {mcProps.options?.map((option) => (
-                <div key={option.id} className="flex items-center py-1">
+            <h3 className="text-lg font-medium">
+              {questionNumber}. {question.text}
+              {question.required && <span className="text-red-500 ml-1">*</span>}
+            </h3>
+            <div className="space-y-2 mt-2 ml-4">
+              {options.map((option, index) => (
+                <div key={option.id || index} className="flex items-center py-1">
                   <input
-                    type="radio"
-                    id={`preview-${option.id}`}
-                    name="preview-option"
+                    type={isMultiple ? 'checkbox' : 'radio'}
+                    name={`preview-${question.id}`}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                   />
-                  <label htmlFor={`preview-${option.id}`} className="ml-2 text-gray-700">
-                    {option.text}
-                  </label>
+                  <span className="ml-2 text-gray-700">
+                    {option.text || `옵션 ${index + 1}`}
+                  </span>
                 </div>
               ))}
             </div>
@@ -43,46 +51,46 @@ export function PreviewModal({ isOpen, onClose, question }: PreviewModalProps) {
       
       case QuestionType.SIDE_BY_SIDE: {
         const renderSideBySidePreview = () => {
-          const props = question.props as SideBySideQuestionProps;
-          const { 
-            sideBySideOptions = [], 
-            columns = [] 
-          } = props;
+          const props = question.props as any;
+          const rows = props.rows || [];
+          const columns = props.columns || [];
           
-          if (sideBySideOptions.length === 0 || columns.length === 0) {
-            return <div className="text-gray-500">미리보기 데이터가 없습니다.</div>;
+          if (rows.length === 0 || columns.length === 0) {
+            return <div className="text-gray-500">미리보기 데이터가 없습니다. 행과 열을 추가해주세요.</div>;
           }
 
           // 모든 컬럼의 서브 컬럼을 평탄화하여 헤더 생성
-          const allSubColumns = columns.flatMap((col, colIndex) => 
-            col.subColumns.map((subCol, subColIndex) => ({
+          const allSubColumns = columns.flatMap((col: any) => 
+            (col.subColumns || []).map((subCol: any) => ({
               ...subCol,
-              columnIndex: colIndex,
-              columnTitle: col.label || `열 ${colIndex + 1}`
+              columnTitle: col.label || `열 ${col.id || ''}`,
+              columnId: col.id
             }))
           );
 
           return (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">미리보기: 병렬 비교 질문</h3>
-              <p className="text-gray-700">{question.text}</p>
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">
+                {questionNumber}. {question.text}
+                {question.required && <span className="text-red-500 ml-1">*</span>}
+              </h3>
               <div className="overflow-x-auto">
                 <table className="min-w-full border">
                   <thead>
                     <tr>
-                      <th className="border p-2 bg-gray-100" rowSpan={2}>항목</th>
-                      {columns.map((col, colIndex) => (
+                      <th className="border p-2 bg-gray-100" rowSpan={2} style={{ width: '200px' }}>항목</th>
+                      {columns.map((col: any, colIndex: number) => (
                         <th 
                           key={col.id || colIndex} 
                           className="border p-2 bg-gray-50"
-                          colSpan={col.subColumns.length}
+                          colSpan={(col.subColumns || []).length}
                         >
                           {col.label || `열 ${colIndex + 1}`}
                         </th>
                       ))}
                     </tr>
                     <tr>
-                      {allSubColumns.map((subCol, index) => (
+                      {allSubColumns.map((subCol: any, index: number) => (
                         <th key={subCol.id || index} className="border p-2 bg-gray-50 text-sm">
                           {subCol.label || `옵션 ${index + 1}`}
                         </th>
@@ -90,16 +98,16 @@ export function PreviewModal({ isOpen, onClose, question }: PreviewModalProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {sideBySideOptions.map((option, rowIndex) => (
-                      <tr key={option.id || rowIndex}>
-                        <td className="border p-2 font-medium align-top" rowSpan={1}>
-                          {option.text || `항목 ${rowIndex + 1}`}
+                    {rows.map((row: any, rowIndex: number) => (
+                      <tr key={row.id || rowIndex}>
+                        <td className="border p-2 font-medium align-top" style={{ width: '200px' }}>
+                          {row.label || `항목 ${rowIndex + 1}`}
                         </td>
-                        {allSubColumns.map((subCol, subColIndex) => (
-                          <td key={`${subCol.id}-${rowIndex}`} className="border p-2 text-center">
+                        {allSubColumns.map((subCol: any) => (
+                          <td key={`${subCol.columnId}-${subCol.id}-${row.id}`} className="border p-2 text-center">
                             <input
                               type="radio"
-                              name={`row-${option.id || rowIndex}`}
+                              name={`row-${row.id || rowIndex}-${subCol.columnId}`}
                               className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                             />
                           </td>
@@ -120,19 +128,23 @@ export function PreviewModal({ isOpen, onClose, question }: PreviewModalProps) {
         const teProps = props as TextEntryQuestionProps;
         return (
           <div className="space-y-2">
-            <h3 className="text-lg font-medium">미리보기: 주관식 질문</h3>
-            <p className="text-gray-700">{question.text}</p>
-            <textarea
-              className="w-full mt-2 p-2 border rounded-md"
-              rows={4}
-              placeholder={teProps.placeholder || '답변을 입력하세요'}
-              maxLength={teProps.maxLength}
-            />
-            {teProps.maxLength && (
-              <p className="text-sm text-gray-500 text-right">
-                최대 {teProps.maxLength}자까지 입력 가능
-              </p>
-            )}
+            <h3 className="text-lg font-medium">
+              {questionNumber}. {question.text}
+              {question.required && <span className="text-red-500 ml-1">*</span>}
+            </h3>
+            <div className="mt-2">
+              <input
+                type="text"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder={teProps.placeholder || '답변을 입력하세요'}
+                disabled
+              />
+              {teProps.maxLength && (
+                <p className="mt-1 text-xs text-gray-500">
+                  최대 {teProps.maxLength}자까지 입력 가능
+                </p>
+              )}
+            </div>
           </div>
         );
       }
@@ -143,30 +155,48 @@ export function PreviewModal({ isOpen, onClose, question }: PreviewModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">질문 미리보기</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-            aria-label="닫기"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div className="mt-4">
-          {renderQuestionPreview()}
-        </div>
-        <div className="mt-6 flex justify-end space-x-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
-          >
-            닫기
-          </button>
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+        <div className="p-8">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-800">설문지 미리보기</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+              aria-label="닫기"
+            >
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="space-y-6">
+            {questions?.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg">
+                <p className="text-lg">추가된 질문이 없습니다.</p>
+                <p className="text-sm mt-2">왼쪽에서 질문을 추가해주세요.</p>
+              </div>
+            ) : (
+              questions.map((question, index) => (
+                <div 
+                  key={question.id} 
+                  className="bg-white p-8 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow"
+                >
+                  {renderQuestionPreview(question, index)}
+                </div>
+              ))
+            )}
+          </div>
+          
+          <div className="flex justify-end mt-10 pt-6 border-t border-gray-100">
+            <button
+              onClick={onClose}
+              className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-base"
+            >
+              닫기
+            </button>
+          </div>
         </div>
       </div>
     </div>

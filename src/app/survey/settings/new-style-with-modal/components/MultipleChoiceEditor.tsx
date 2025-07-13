@@ -5,16 +5,7 @@ interface Option {
   text: string;
 }
 
-interface MultipleChoiceEditorProps {
-  question?: string;
-  isRequired?: boolean;
-  options?: Array<{ id: string; text: string }>;
-  optionCount?: number;
-  onQuestionChange?: (text: string) => void;
-  onRequiredChange?: (required: boolean) => void;
-  onOptionsChange?: (options: Array<{ id: string; text: string }>) => void;
-  onOptionCountChange?: (count: number) => void;
-}
+interface MultipleChoiceEditorProps {}
 
 interface MultipleChoiceEditorRef {
   getState: () => {
@@ -25,18 +16,14 @@ interface MultipleChoiceEditorRef {
   };
 }
 
-export const MultipleChoiceEditor = forwardRef<MultipleChoiceEditorRef, MultipleChoiceEditorProps>(({ question: initialQuestion = '', isRequired: initialIsRequired = false, options: initialOptions = [], onQuestionChange, onRequiredChange, onOptionsChange, onOptionCountChange }, ref) => {
-  const [options, setOptions] = useState<Option[]>(
-    initialOptions.length > 0 
-      ? initialOptions 
-      : [
-          { id: '1', text: '옵션 1' },
-          { id: '2', text: '옵션 2' },
-        ]
-  );
+export const MultipleChoiceEditor = forwardRef<MultipleChoiceEditorRef, MultipleChoiceEditorProps>((props, ref) => {
+  const [options, setOptions] = useState<Option[]>([
+    { id: '1', text: '옵션 1' },
+    { id: '2', text: '옵션 2' },
+  ]);
   const [optionCount, setOptionCount] = useState(2);
-  const [question, setQuestion] = useState<string>(initialQuestion);
-  const [isRequired, setIsRequired] = useState<boolean>(initialIsRequired);
+  const [question, setQuestion] = useState<string>("");
+  const [isRequired, setIsRequired] = useState<boolean>(false);
 
   useImperativeHandle(ref, () => ({
     getState: () => ({
@@ -49,27 +36,21 @@ export const MultipleChoiceEditor = forwardRef<MultipleChoiceEditorRef, Multiple
 
   const addOption = () => {
     const newId = (options.length + 1).toString();
-    const newOptions = [...options, { id: newId, text: `옵션 ${newId}` }];
-    setOptions(newOptions);
-    setOptionCount(newOptions.length);
-    onOptionsChange?.(newOptions);
-    onOptionCountChange?.(newOptions.length);
+    setOptions([...options, { id: newId, text: `옵션 ${newId}` }]);
+    setOptionCount(optionCount + 1);
   };
 
   const updateOption = (id: string, text: string) => {
-    const newOptions = options.map(option => 
+    setOptions(options.map(option => 
       option.id === id ? { ...option, text } : option
-    );
-    setOptions(newOptions);
-    onOptionsChange?.(newOptions);
+    ));
   };
 
   const removeOption = (id: string) => {
-    const newOptions = options.filter(option => option.id !== id);
-    setOptions(newOptions);
-    setOptionCount(newOptions.length);
-    onOptionsChange?.(newOptions);
-    onOptionCountChange?.(newOptions.length);
+    if (options.length > 1) {
+      setOptions(options.filter(option => option.id !== id));
+      setOptionCount(optionCount - 1);
+    }
   };
 
   return (

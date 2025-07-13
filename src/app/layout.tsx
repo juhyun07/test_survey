@@ -38,10 +38,13 @@ export default function RootLayout({
                 <a href="/survey" className="hover:text-white/80">설문조사</a>
               </li>
               <li>
-                <a href="/survey/settings" className="hover:text-white/80">설문조사 설정</a>
+                <a href="/survey/settings" className="hover:text-white/80">설문조사 설정 (old)</a>
               </li>
               <li>
-                <a href="/survey/settings/new-style" className="hover:text-white/80">설문조사 설정2</a>
+                <a href="/survey/settings/new-style" className="hover:text-white/80">설문조사 설정 (new)</a>
+              </li>
+              <li>
+                <a href="/survey/settings/new-style-with-modal" className="hover:text-white/80">설문조사 설정 (new with modal)</a>
               </li>
             </ul>
           </div>

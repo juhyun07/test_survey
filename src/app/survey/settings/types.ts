@@ -1,11 +1,19 @@
 export enum QuestionType {
   MULTIPLE_CHOICE = 'MULTIPLE_CHOICE',
+  MULTIPLE_CHOICE_MULTIPLE = 'MULTIPLE_CHOICE_MULTIPLE',
   SIDE_BY_SIDE = 'SIDE_BY_SIDE',
   TEXT_ENTRY = 'TEXT_ENTRY'
 }
 
 // 각 질문 유형별 추가 프로퍼티 인터페이스
-export interface MultipleChoiceQuestionProps {
+// 모든 질문 유형에 공통으로 사용될 수 있는 속성들
+export interface BaseQuestionProps {
+  options?: any[];
+  optionCount?: number;
+  [key: string]: any;
+}
+
+export interface MultipleChoiceQuestionProps extends BaseQuestionProps {
   options: MultipleChoiceOption[];
   optionCount: number;
 }
@@ -21,7 +29,7 @@ export interface ColumnGroup {
   subColumns: SubColumn[];
 }
 
-export interface SideBySideQuestionProps {
+export interface SideBySideQuestionProps extends BaseQuestionProps {
   sideBySideOptions: SideBySideOption[];
   optionCount: number;
   columnCount: number;
@@ -33,7 +41,7 @@ export interface SideBySideQuestionProps {
 export const COLUMN_COUNT_RANGE = [2, 4];
 export const OPTION_COUNT_RANGE = [1, 4];
 
-export interface TextEntryQuestionProps {
+export interface TextEntryQuestionProps extends BaseQuestionProps {
   maxLength?: number;
   placeholder?: string;
 }
@@ -41,6 +49,7 @@ export interface TextEntryQuestionProps {
 // 질문 유형별 프로퍼티 매핑
 export type QuestionPropsMap = {
   [QuestionType.MULTIPLE_CHOICE]: MultipleChoiceQuestionProps;
+  [QuestionType.MULTIPLE_CHOICE_MULTIPLE]: MultipleChoiceQuestionProps;
   [QuestionType.SIDE_BY_SIDE]: SideBySideQuestionProps;
   [QuestionType.TEXT_ENTRY]: TextEntryQuestionProps;
 };
@@ -72,6 +81,8 @@ export interface Question {
   exportTag?: string;
   options?: MultipleChoiceOption[];
   optionCount?: number;
+  columnCount?: number;
+  isExpanded?: boolean; // 편집창 확장 상태
   props: QuestionPropsMap[QuestionType];
 }
 
