@@ -15,7 +15,7 @@ type SideBySideOption = {
     }>;
   }>;
 };
-import { QuestionType, Question } from '../types';
+import { Question, QuestionType, SavedSurvey } from '../types';
 import { MultipleChoiceEditor } from './components/MultipleChoiceEditor';
 import { SideBySideEditor } from './components/SideBySideEditor';
 import { TextEntryEditor } from './components/TextEntryEditor';
@@ -111,6 +111,27 @@ export default function QualtricsStyleSurveyEditor() {
         i === index ? { ...q, isExpanded: !q.isExpanded } : q
       )
     );
+  };
+
+  // 설문지 저장 처리
+  const handleSaveSurvey = (surveyData: Omit<SavedSurvey, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newSurvey: SavedSurvey = {
+      ...surveyData,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // 기존 설문지 목록 가져오기
+    const savedSurveys = JSON.parse(localStorage.getItem('savedSurveys') || '[]');
+    
+    // 새 설문지 추가
+    const updatedSurveys = [...savedSurveys, newSurvey];
+    
+    // 로컬 스토리지에 저장
+    localStorage.setItem('savedSurveys', JSON.stringify(updatedSurveys));
+    
+    alert('설문지가 성공적으로 저장되었습니다.');
   };
 
   // 질문 업데이트 핸들러
@@ -484,6 +505,7 @@ export default function QualtricsStyleSurveyEditor() {
         isOpen={isPreviewOpen} 
         onClose={closePreview} 
         questions={questions} 
+        onSave={handleSaveSurvey}
       />
     </div>
   );

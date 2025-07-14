@@ -77,13 +77,22 @@ export interface Question {
   id: string;
   type: QuestionType;
   text: string;
-  required?: boolean;
+  required: boolean;
   exportTag?: string;
-  options?: MultipleChoiceOption[];
+  options?: any[];
   optionCount?: number;
   columnCount?: number;
-  isExpanded?: boolean; // 편집창 확장 상태
-  props: QuestionPropsMap[QuestionType];
+  isExpanded?: boolean;
+  props?: any;
+}
+
+export interface SavedSurvey {
+  id: string;
+  title: string;
+  description: string;
+  questions: Question[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SurveyEditorState {
