@@ -7,9 +7,10 @@ import Link from 'next/link';
 
 const QuestionPreview = ({ question, index }: { question: Question; index: number }) => {
   switch (question.type) {
+    case QuestionType.CHECKBOX:
     case QuestionType.MULTIPLE_CHOICE:
     case QuestionType.MULTIPLE_CHOICE_MULTIPLE: {
-      const isMultiple = question.type === QuestionType.MULTIPLE_CHOICE_MULTIPLE;
+      const isMultiple = question.type === QuestionType.MULTIPLE_CHOICE_MULTIPLE || question.type === QuestionType.CHECKBOX;
       return (
         <div className="space-y-2">
           <h3 className="text-lg font-medium">

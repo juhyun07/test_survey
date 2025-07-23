@@ -262,6 +262,7 @@ export default function QualtricsStyleSurveyEditor() {
               <h3 className="font-medium">{question.text || `질문 ${index + 1}`}</h3>
               <span className="text-sm text-gray-500">
                 {question.type === QuestionType.MULTIPLE_CHOICE && '복수 선택'}
+                {question.type === QuestionType.CHECKBOX && '체크박스'}
                 {question.type === QuestionType.SIDE_BY_SIDE && '병렬 비교'}
                 {question.type === QuestionType.TEXT_ENTRY && '텍스트 답변'}
               </span>
@@ -292,6 +293,12 @@ export default function QualtricsStyleSurveyEditor() {
           >
             텍스트 답변 추가
           </button>
+          <button
+            onClick={() => handleAddQuestion(QuestionType.CHECKBOX)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            체크박스 추가
+          </button>
         </div>
       </div>
 
@@ -302,6 +309,7 @@ export default function QualtricsStyleSurveyEditor() {
             <div className="p-6">
               <h2 className="text-xl font-bold mb-4">
                 {editingQuestion.type === QuestionType.MULTIPLE_CHOICE && '복수 선택'}
+                {editingQuestion.type === QuestionType.CHECKBOX && '체크박스'}
                 {editingQuestion.type === QuestionType.SIDE_BY_SIDE && '병렬 비교'}
                 {editingQuestion.type === QuestionType.TEXT_ENTRY && '텍스트 답변'}
                 {' '}질문 편집

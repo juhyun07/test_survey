@@ -16,6 +16,7 @@ export function PreviewModal({ isOpen, onClose, questions }: PreviewModalProps) 
     const props = question.props;
     
     switch (question.type) {
+      case QuestionType.CHECKBOX:
       case QuestionType.MULTIPLE_CHOICE: {
         const mcProps = props as MultipleChoiceQuestionProps;
         return (
@@ -26,9 +27,9 @@ export function PreviewModal({ isOpen, onClose, questions }: PreviewModalProps) 
               {mcProps.options?.map((option) => (
                 <div key={option.id} className="flex items-center py-1">
                   <input
-                    type="radio"
+                    type={question.type === QuestionType.CHECKBOX ? 'checkbox' : 'radio'}
                     id={`preview-${option.id}`}
-                    name="preview-option"
+                    name={`preview-option-${question.id}`}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                   />
                   <label htmlFor={`preview-${option.id}`} className="ml-2 text-gray-700">
@@ -170,6 +171,7 @@ export function PreviewModal({ isOpen, onClose, questions }: PreviewModalProps) 
                     <span className="font-medium text-gray-700 mr-2">Q{index + 1}.</span>
                     <span className="text-gray-500 text-sm">
                       {question.type === QuestionType.MULTIPLE_CHOICE && '복수 선택'}
+                      {question.type === QuestionType.CHECKBOX && '체크박스'}
                       {question.type === QuestionType.SIDE_BY_SIDE && '병렬 비교'}
                       {question.type === QuestionType.TEXT_ENTRY && '텍스트 답변'}
                     </span>

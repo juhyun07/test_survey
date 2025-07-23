@@ -17,6 +17,7 @@ type SideBySideOption = {
 };
 import { Question, QuestionType, SavedSurvey } from '../types';
 import { MultipleChoiceEditor } from './components/MultipleChoiceEditor';
+import { CheckBoxEditor } from './components/CheckBoxEditor';
 import { SideBySideEditor } from './components/SideBySideEditor';
 import { TextEntryEditor } from './components/TextEntryEditor';
 import { PreviewModal } from './components/PreviewModal';
@@ -33,6 +34,7 @@ const createNewQuestion = (type: QuestionType): Question => {
   };
 
   switch (type) {
+    case QuestionType.CHECKBOX:
     case QuestionType.MULTIPLE_CHOICE:
       return {
         ...baseQuestion,
@@ -162,7 +164,8 @@ export default function QualtricsStyleSurveyEditor() {
   // 에디터 상태를 저장할 refs
   const multipleChoiceRef = useRef<{ getState: () => any }>(null);
   const sideBySideRef = useRef<{ getState: () => any }>(null);
-  const textEntryRef = useRef<{ getState: () => any }>(null);
+    const textEntryRef = useRef<{ getState: () => any }>(null);
+  const checkBoxRef = useRef<{ getState: () => any }>(null);
 
   const handleAddQuestion = (type: QuestionType) => {
     const newQuestion = createNewQuestion(type);
@@ -204,6 +207,7 @@ export default function QualtricsStyleSurveyEditor() {
     };
 
     switch (type) {
+      case QuestionType.CHECKBOX:
       case QuestionType.MULTIPLE_CHOICE:
         return {
           ...baseQuestion,
@@ -264,6 +268,9 @@ export default function QualtricsStyleSurveyEditor() {
           case QuestionType.TEXT_ENTRY:
             textEntryRef.current = ref;
             break;
+          case QuestionType.CHECKBOX:
+            checkBoxRef.current = ref;
+            break;
         }
       },
       question: question.text,
@@ -271,6 +278,22 @@ export default function QualtricsStyleSurveyEditor() {
     };
 
     switch (question.type) {
+      case QuestionType.CHECKBOX:
+        return (
+          <CheckBoxEditor
+            {...commonProps}
+            options={question.options || []}
+            onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
+            onRequiredChange={(required) => handleUpdateQuestion(question.id, { required })}
+            onOptionsChange={(options) => handleUpdateQuestion(question.id, { 
+              options, 
+              optionCount: options.length 
+            })}
+            onOptionCountChange={(count) => handleUpdateQuestion(question.id, { 
+              optionCount: count 
+            })}
+          />
+        );
       case QuestionType.MULTIPLE_CHOICE:
         return (
           <MultipleChoiceEditor
@@ -372,7 +395,13 @@ export default function QualtricsStyleSurveyEditor() {
       {/* 질문 추가 버튼 */}
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <label className="block text-sm font-medium text-gray-700 mb-2">새 질문 추가</label>
-        <div className="flex space-x-3">
+                  <div className="flex space-x-3">
+            <button
+              onClick={() => handleAddQuestion(QuestionType.CHECKBOX)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+            >
+              복수 선택 (체크박스)
+            </button>
           <button
             onClick={() => handleAddQuestion(QuestionType.MULTIPLE_CHOICE)}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
@@ -413,7 +442,9 @@ export default function QualtricsStyleSurveyEditor() {
                 <span className="ml-3 text-sm text-gray-500">
                   ({question.type === QuestionType.MULTIPLE_CHOICE && '복수 선택'}
                   {question.type === QuestionType.SIDE_BY_SIDE && '병렬 비교'}
-                  {question.type === QuestionType.TEXT_ENTRY && '텍스트 답변'})
+                  {question.type === QuestionType.TEXT_ENTRY && '텍스트 답변'}
+                  {question.type === QuestionType.CHECKBOX && '체크박스'}
+                  )
                 </span>
                 {question.required && (
                   <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">

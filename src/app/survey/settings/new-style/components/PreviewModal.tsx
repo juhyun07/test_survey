@@ -102,11 +102,12 @@ export function PreviewModal({ isOpen, onClose, questions, onSave }: PreviewModa
     const questionNumber = `Q${index + 1}`;
     
     switch (question.type) {
+      case QuestionType.CHECKBOX:
       case QuestionType.MULTIPLE_CHOICE:
       case QuestionType.MULTIPLE_CHOICE_MULTIPLE: {
         // 현재 질문의 옵션을 그대로 사용
         const options = question.options || [];
-        const isMultiple = question.type === QuestionType.MULTIPLE_CHOICE_MULTIPLE;
+        const isMultiple = question.type === QuestionType.MULTIPLE_CHOICE_MULTIPLE || question.type === QuestionType.CHECKBOX;
         
         return (
           <div className="space-y-2">
