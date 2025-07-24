@@ -14,6 +14,7 @@ export function PreviewModal({ isOpen, onClose, questions, onSave }: PreviewModa
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>({});
 
   const handleSaveClick = () => {
     setIsSaveModalOpen(true);
@@ -108,7 +109,51 @@ export function PreviewModal({ isOpen, onClose, questions, onSave }: PreviewModa
         // 현재 질문의 옵션을 그대로 사용
         const options = question.options || [];
         const isMultiple = question.type === QuestionType.MULTIPLE_CHOICE_MULTIPLE || question.type === QuestionType.CHECKBOX;
-        
+
+        const handleOptionToggle = (questionId: string, optionId: string) => {
+          setSelectedOptions(prev => {
+            const currentSelections = prev[questionId] || [];
+            let newSelections;
+
+            if (isMultiple) {
+              newSelections = currentSelections.includes(optionId)
+                ? currentSelections.filter(id => id !== optionId)
+                : [...currentSelections, optionId];
+            } else {
+              newSelections = [optionId];
+            }
+            return { ...prev, [questionId]: newSelections };
+          });
+        };
+
+        const renderOptions = (optionsToRender: MultipleChoiceOption[], level = 0) => {
+          return optionsToRender.map((option, index) => {
+            const isSelected = selectedOptions[question.id]?.includes(option.id);
+            return (
+              <div key={option.id || index} style={{ marginLeft: `${level * 2}rem` }}>
+                <div className="flex items-center py-1">
+                  <input
+                    type={isMultiple ? 'checkbox' : 'radio'}
+                    name={`preview-${question.id}`}
+                    id={`preview-${question.id}-${option.id}`}
+                    checked={isSelected}
+                    onChange={() => handleOptionToggle(question.id, option.id)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor={`preview-${question.id}-${option.id}`} className="ml-2 text-gray-700">
+                    {option.text || `옵션 ${index + 1}`}
+                  </label>
+                </div>
+                {isSelected && option.children && (
+                  <div className="mt-2">
+                    {renderOptions(option.children, level + 1)}
+                  </div>
+                )}
+              </div>
+            );
+          });
+        };
+
         return (
           <div className="space-y-2">
             <h3 className="text-lg font-medium">
@@ -116,18 +161,7 @@ export function PreviewModal({ isOpen, onClose, questions, onSave }: PreviewModa
               {question.required && <span className="text-red-500 ml-1">*</span>}
             </h3>
             <div className="space-y-2 mt-2 ml-4">
-              {options.map((option, index) => (
-                <div key={option.id || index} className="flex items-center py-1">
-                  <input
-                    type={isMultiple ? 'checkbox' : 'radio'}
-                    name={`preview-${question.id}`}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-gray-700">
-                    {option.text || `옵션 ${index + 1}`}
-                  </span>
-                </div>
-              ))}
+              {renderOptions(options)}
             </div>
           </div>
         );

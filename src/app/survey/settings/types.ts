@@ -59,6 +59,7 @@ export interface MultipleChoiceOption {
   id: string;
   text: string;
   isCorrect?: boolean;
+  children?: MultipleChoiceOption[];
 }
 
 export interface SideBySideOption {

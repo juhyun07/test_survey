@@ -5,12 +5,51 @@ import { useParams, useRouter } from 'next/navigation';
 import { SavedSurvey, Question, QuestionType } from '@/app/survey/settings/types';
 import Link from 'next/link';
 
-const QuestionPreview = ({ question, index }: { question: Question; index: number }) => {
+const QuestionPreview = ({
+  question,
+  index,
+  answer,
+  onAnswerChange,
+}: {
+  question: Question;
+  index: number;
+  answer: string[];
+  onAnswerChange: (optionId: string) => void;
+}) => {
   switch (question.type) {
     case QuestionType.CHECKBOX:
     case QuestionType.MULTIPLE_CHOICE:
     case QuestionType.MULTIPLE_CHOICE_MULTIPLE: {
       const isMultiple = question.type === QuestionType.MULTIPLE_CHOICE_MULTIPLE || question.type === QuestionType.CHECKBOX;
+
+      const renderOptions = (optionsToRender: any[], level = 0) => {
+        return optionsToRender.map((option, idx) => {
+          const isSelected = answer?.includes(option.id);
+          return (
+            <div key={option.id || idx} style={{ marginLeft: `${level * 2}rem` }}>
+              <div className="flex items-center py-1">
+                <input
+                  type={isMultiple ? 'checkbox' : 'radio'}
+                  name={`q-${question.id}`}
+                  id={`q-${question.id}-${option.id}`}
+                  checked={isSelected}
+                  onChange={() => onAnswerChange(option.id)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor={`q-${question.id}-${option.id}`} className="ml-2 text-gray-700">
+                  {option.text || `옵션 ${idx + 1}`}
+                </label>
+              </div>
+              {isSelected && option.children && (
+                <div className="mt-2">
+                  {renderOptions(option.children, level + 1)}
+                </div>
+              )}
+            </div>
+          );
+        });
+      };
+
       return (
         <div className="space-y-2">
           <h3 className="text-lg font-medium">
@@ -18,19 +57,7 @@ const QuestionPreview = ({ question, index }: { question: Question; index: numbe
             {question.required && <span className="text-red-500 ml-1">*</span>}
           </h3>
           <div className="space-y-2 mt-2 ml-4">
-            {question.options?.map((option, idx) => (
-              <div key={idx} className="flex items-center py-1">
-                <input
-                  type={isMultiple ? 'checkbox' : 'radio'}
-                  name={`q${index}`}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                  disabled
-                />
-                <span className="ml-2 text-gray-700">
-                  {option.text || `옵션 ${idx + 1}`}
-                </span>
-              </div>
-            ))}
+            {renderOptions(question.options || [])}
           </div>
         </div>
       );
@@ -49,7 +76,6 @@ const QuestionPreview = ({ question, index }: { question: Question; index: numbe
               type="text"
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               placeholder={props.placeholder || '답변을 입력하세요'}
-              disabled
             />
             {props.maxLength && (
               <p className="mt-1 text-xs text-gray-500">
@@ -123,7 +149,6 @@ const QuestionPreview = ({ question, index }: { question: Question; index: numbe
                           type="radio"
                           name={`row-${row.id || rowIndex}-${subCol.columnId}`}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                          disabled
                         />
                       </td>
                     ))}
@@ -148,6 +173,7 @@ export default function SurveyDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const [survey, setSurvey] = useState<SavedSurvey | null>(null);
+  const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -172,6 +198,22 @@ export default function SurveyDetailPage() {
 
     loadSurvey();
   }, [id]);
+
+  const handleAnswerChange = (questionId: string, optionId: string, isMultiple: boolean) => {
+    setAnswers(prev => {
+      const currentSelections = prev[questionId] || [];
+      let newSelections;
+
+      if (isMultiple) {
+        newSelections = currentSelections.includes(optionId)
+          ? currentSelections.filter(id => id !== optionId)
+          : [...currentSelections, optionId];
+      } else {
+        newSelections = [optionId];
+      }
+      return { ...prev, [questionId]: newSelections };
+    });
+  };
 
   const handleDelete = () => {
     if (window.confirm('정말 이 설문지를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
@@ -254,7 +296,12 @@ export default function SurveyDetailPage() {
                 key={question.id} 
                 className="border-b border-gray-100 pb-6 last:border-0 last:pb-0"
               >
-                <QuestionPreview question={question} index={index} />
+                <QuestionPreview
+                  question={question}
+                  index={index}
+                  answer={answers[question.id] || []}
+                  onAnswerChange={(optionId) => handleAnswerChange(question.id, optionId, question.type === QuestionType.MULTIPLE_CHOICE_MULTIPLE || question.type === QuestionType.CHECKBOX)}
+                />
               </div>
             ))}
           </div>
