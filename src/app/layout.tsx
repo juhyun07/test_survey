@@ -49,6 +49,12 @@ export default function RootLayout({
               <li>
                 <a href="/survey/settings/new-style-with-modal" className="hover:text-white/80">설문조사 설정 (new with modal)</a>
               </li>
+              <li>
+                <a href="/survey/test" className="hover:text-white/80">설문 테스트</a>
+              </li>
+              <li>
+                <a href="/survey/results" className="hover:text-white/80">설문 결과</a>
+              </li>
             </ul>
           </div>
         </nav>

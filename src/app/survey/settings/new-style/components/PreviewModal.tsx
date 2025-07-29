@@ -156,10 +156,12 @@ export function PreviewModal({ isOpen, onClose, questions, onSave }: PreviewModa
 
         return (
           <div className="space-y-2">
-            <h3 className="text-lg font-medium">
-              {questionNumber}. {question.text}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
-            </h3>
+            <div className="flex items-center">
+              <h3 className="text-lg font-medium">
+                {questionNumber}. {question.text}
+              </h3>
+              {question.required && <span className="text-red-500 ml-2 font-semibold">* 필수</span>}
+            </div>
             <div className="space-y-2 mt-2 ml-4">
               {renderOptions(options)}
             </div>
@@ -188,10 +190,12 @@ export function PreviewModal({ isOpen, onClose, questions, onSave }: PreviewModa
 
           return (
             <div className="space-y-2">
-              <h3 className="text-lg font-medium">
-                {questionNumber}. {question.text}
-                {question.required && <span className="text-red-500 ml-1">*</span>}
-              </h3>
+              <div className="flex items-center mb-2">
+                <h3 className="text-lg font-medium">
+                  {questionNumber}. {question.text}
+                </h3>
+                {question.required && <span className="text-red-500 ml-2 font-semibold">* 필수</span>}
+              </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full border">
                   <thead>
@@ -246,10 +250,12 @@ export function PreviewModal({ isOpen, onClose, questions, onSave }: PreviewModa
         const teProps = props as TextEntryQuestionProps;
         return (
           <div className="space-y-2">
-            <h3 className="text-lg font-medium">
-              {questionNumber}. {question.text}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
-            </h3>
+            <div className="flex items-center">
+              <h3 className="text-lg font-medium">
+                {questionNumber}. {question.text}
+              </h3>
+              {question.required && <span className="text-red-500 ml-2 font-semibold">* 필수</span>}
+            </div>
             <div className="mt-2">
               <input
                 type="text"

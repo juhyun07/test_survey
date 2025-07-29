@@ -1,7 +1,10 @@
 'use client';
 
+'use client';
+
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { v4 as uuidv4 } from 'uuid';
 import { SavedSurvey, Question, QuestionType } from '@/app/survey/settings/types';
 import Link from 'next/link';
 
@@ -14,7 +17,7 @@ const QuestionPreview = ({
   question: Question;
   index: number;
   answer: string[];
-  onAnswerChange: (optionId: string) => void;
+  onAnswerChange: (value: string | string[], questionType: QuestionType) => void;
 }) => {
   switch (question.type) {
     case QuestionType.CHECKBOX:
@@ -33,7 +36,7 @@ const QuestionPreview = ({
                   name={`q-${question.id}`}
                   id={`q-${question.id}-${option.id}`}
                   checked={isSelected}
-                  onChange={() => onAnswerChange(option.id)}
+                  onChange={() => onAnswerChange(option.id, question.type)}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                 />
                 <label htmlFor={`q-${question.id}-${option.id}`} className="ml-2 text-gray-700">
@@ -74,8 +77,11 @@ const QuestionPreview = ({
           <div className="mt-2">
             <input
               type="text"
+              value={answer?.[0] || ''}
+              onChange={(e) => onAnswerChange(e.target.value, question.type)}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               placeholder={props.placeholder || '답변을 입력하세요'}
+              maxLength={props.maxLength}
             />
             {props.maxLength && (
               <p className="mt-1 text-xs text-gray-500">
@@ -148,6 +154,8 @@ const QuestionPreview = ({
                         <input
                           type="radio"
                           name={`row-${row.id || rowIndex}-${subCol.columnId}`}
+                          checked={answer?.includes(`${row.id}:${subCol.id}`)}
+                          onChange={() => onAnswerChange(`${row.id}:${subCol.id}`, question.type)}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                         />
                       </td>
@@ -199,19 +207,37 @@ export default function SurveyDetailPage() {
     loadSurvey();
   }, [id]);
 
-  const handleAnswerChange = (questionId: string, optionId: string, isMultiple: boolean) => {
+  const handleAnswerChange = (questionId: string, value: string | string[], questionType: QuestionType) => {
     setAnswers(prev => {
-      const currentSelections = prev[questionId] || [];
-      let newSelections;
+      const currentAnswers = prev[questionId] || [];
+      let newAnswers: string[] = [...currentAnswers];
 
-      if (isMultiple) {
-        newSelections = currentSelections.includes(optionId)
-          ? currentSelections.filter(id => id !== optionId)
-          : [...currentSelections, optionId];
-      } else {
-        newSelections = [optionId];
+      switch (questionType) {
+        case QuestionType.CHECKBOX:
+        case QuestionType.MULTIPLE_CHOICE_MULTIPLE:
+          if (typeof value === 'string') {
+            newAnswers = currentAnswers.includes(value)
+              ? currentAnswers.filter(id => id !== value)
+              : [...currentAnswers, value];
+          }
+          break;
+        case QuestionType.MULTIPLE_CHOICE:
+          newAnswers = [value as string];
+          break;
+        case QuestionType.TEXT_ENTRY:
+          newAnswers = [value as string];
+          break;
+        case QuestionType.SIDE_BY_SIDE:
+          if (typeof value === 'string') {
+            const [rowId] = value.split(':');
+            const filteredAnswers = currentAnswers.filter(ans => !ans.startsWith(`${rowId}:`));
+            newAnswers = [...filteredAnswers, value];
+          }
+          break;
+        default:
+          break;
       }
-      return { ...prev, [questionId]: newSelections };
+      return { ...prev, [questionId]: newAnswers };
     });
   };
 
@@ -227,6 +253,71 @@ export default function SurveyDetailPage() {
         console.error('설문지 삭제 중 오류 발생:', error);
         alert('설문지 삭제 중 오류가 발생했습니다.');
       }
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!survey) return;
+
+    for (const question of survey.questions) {
+      if (!question.required) {
+        continue; // 필수 항목이 아니면 건너뜁니다.
+      }
+
+      const answer = answers[question.id];
+      let isAnswered = false;
+
+      switch (question.type) {
+        case QuestionType.TEXT_ENTRY:
+          isAnswered = !!answer && answer.length > 0 && answer[0].trim() !== '';
+          break;
+
+        case QuestionType.MULTIPLE_CHOICE:
+        case QuestionType.CHECKBOX:
+        case QuestionType.MULTIPLE_CHOICE_MULTIPLE:
+          isAnswered = !!answer && answer.length > 0;
+          break;
+
+        case QuestionType.SIDE_BY_SIDE:
+          const rows = question.props?.rows || [];
+          // 행이 없으면 응답할 수 없으므로, 유효성 검사를 통과시킵니다.
+          if (rows.length === 0) {
+            isAnswered = true;
+            break;
+          }
+          const answeredRows = new Set((answer || []).map(a => a.split(':')[0]));
+          isAnswered = rows.length === answeredRows.size;
+          break;
+
+        default:
+          // 지원하지 않는 질문 유형은 일단 통과시킵니다.
+          isAnswered = true;
+          break;
+      }
+
+      if (!isAnswered) {
+        alert(`필수 질문입니다: "${question.text}"`);
+        return;
+      }
+    }
+
+    const result = {
+      submissionId: uuidv4(),
+      surveyId: survey.id,
+      title: survey.title,
+      submittedAt: new Date().toISOString(),
+      answers: answers,
+    };
+
+    try {
+      const savedResults = JSON.parse(localStorage.getItem('surveyResults') || '[]');
+      const updatedResults = [...savedResults, result];
+      localStorage.setItem('surveyResults', JSON.stringify(updatedResults));
+      alert('설문이 성공적으로 제출되었습니다.');
+      router.push('/survey/test');
+    } catch (error) {
+      console.error('설문 결과 저장 중 오류 발생:', error);
+      alert('설문 결과 저장 중 오류가 발생했습니다.');
     }
   };
 
@@ -300,7 +391,7 @@ export default function SurveyDetailPage() {
                   question={question}
                   index={index}
                   answer={answers[question.id] || []}
-                  onAnswerChange={(optionId) => handleAnswerChange(question.id, optionId, question.type === QuestionType.MULTIPLE_CHOICE_MULTIPLE || question.type === QuestionType.CHECKBOX)}
+                  onAnswerChange={(value) => handleAnswerChange(question.id, value, question.type)}
                 />
               </div>
             ))}
@@ -312,13 +403,19 @@ export default function SurveyDetailPage() {
         )}
       </div>
       
-      <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end">
+      <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end space-x-3">
         <Link 
-          href="/survey2"
-          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          href="/survey/test"
+          className="px-6 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
         >
           목록으로 돌아가기
         </Link>
+        <button
+          onClick={handleSubmit}
+          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+        >
+          제출하기
+        </button>
       </div>
     </div>
   );

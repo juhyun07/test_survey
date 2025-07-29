@@ -288,7 +288,10 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
           type="text"
           className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
           value={question}
-          onChange={(e) => setQuestion(e.target.value)}
+          onChange={(e) => {
+            setQuestion(e.target.value);
+            onQuestionChange?.(e.target.value);
+          }}
           placeholder="질문을 입력하세요"
         />
       </div>
@@ -524,7 +527,10 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
               type="checkbox"
               id="required"
               checked={isRequired}
-              onChange={(e) => setIsRequired(e.target.checked)}
+              onChange={(e) => {
+                setIsRequired(e.target.checked);
+                onRequiredChange?.(e.target.checked);
+              }}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="required" className="ml-2 block text-sm text-gray-700">
