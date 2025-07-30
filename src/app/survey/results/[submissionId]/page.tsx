@@ -18,32 +18,68 @@ const AnswerDisplay = ({ question, answer }: { question: Question; answer: strin
     return <p className="text-gray-500 italic">답변 없음</p>;
   }
 
-  const getOptionText = (optionId: string) => {
-    const findOption = (options: any[]): any | undefined => {
-      for (const option of options) {
-        if (option.id === optionId) return option;
-        if (option.children) {
-          const found = findOption(option.children);
-          if (found) return found;
-        }
+  // 옵션 ID로 전체 옵션 객체를 찾는 재귀 함수
+  const findOptionById = (options: any[], optionId: string): any | undefined => {
+    for (const option of options) {
+      if (option.id === optionId) return option;
+      if (option.children) {
+        const found = findOptionById(option.children, optionId);
+        if (found) return found;
       }
-      return undefined;
-    };
-    const option = findOption(question.options || []);
-    return option ? option.text : '알 수 없는 옵션';
+    }
+    return undefined;
+  };
+
+  // 선택된 옵션을 트리 형태로 렌더링하는 재귀 함수
+  const renderOptionTree = (option: any, level = 0) => {
+    if (!option) return null;
+
+    const isSelected = answer.includes(option.id);
+
+    return (
+      <div key={option.id} style={{ marginLeft: `${level * 1.5}rem` }} className="mt-2">
+        <div className="flex items-start">
+          <div className="w-5 mr-2 flex-shrink-0">
+            {isSelected && (
+              <svg
+                className="h-5 w-5 text-blue-600"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+          </div>
+          <span className={`${isSelected ? 'font-semibold text-blue-600' : 'text-gray-700'}`}>
+            {option.text || '알 수 없는 옵션'}
+          </span>
+        </div>
+
+        {option.children && (
+          <div>
+            {option.children.map((child: any) => renderOptionTree(child, level + 1))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   switch (question.type) {
     case QuestionType.CHECKBOX:
     case QuestionType.MULTIPLE_CHOICE:
     case QuestionType.MULTIPLE_CHOICE_MULTIPLE:
+      // 최상위 옵션들만 렌더링 시작점으로 사용
       return (
-        <ul className="list-disc list-inside">
-          {answer.map(optionId => (
-            <li key={optionId} className="text-gray-800">{getOptionText(optionId)}</li>
-          ))}
-        </ul>
+        <div>
+          {question.options?.map(option => renderOptionTree(option))}
+        </div>
       );
+
     case QuestionType.TEXT_ENTRY:
       return <p className="text-gray-800 bg-gray-100 p-2 rounded">{answer[0]}</p>;
     

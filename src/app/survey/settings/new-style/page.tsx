@@ -256,7 +256,6 @@ export default function QualtricsStyleSurveyEditor() {
 
   const renderEditor = (question: Question) => {
     const commonProps = {
-      key: question.id,
       ref: (ref: any) => {
         switch (question.type) {
           case QuestionType.MULTIPLE_CHOICE:
@@ -281,6 +280,7 @@ export default function QualtricsStyleSurveyEditor() {
       case QuestionType.CHECKBOX:
         return (
           <CheckBoxEditor
+            key={question.id}
             {...commonProps}
             options={question.options || []}
             onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
@@ -297,6 +297,7 @@ export default function QualtricsStyleSurveyEditor() {
       case QuestionType.MULTIPLE_CHOICE:
         return (
           <MultipleChoiceEditor
+            key={question.id}
             {...commonProps}
             options={question.options || []}
             onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
@@ -313,6 +314,7 @@ export default function QualtricsStyleSurveyEditor() {
       case QuestionType.SIDE_BY_SIDE:
         return (
           <SideBySideEditor
+            key={question.id}
             {...commonProps}
             rows={question.props?.rows || []}
             columns={question.props?.columns || []}
@@ -356,17 +358,14 @@ export default function QualtricsStyleSurveyEditor() {
       case QuestionType.TEXT_ENTRY:
         return (
           <TextEntryEditor
+            key={question.id}
             {...commonProps}
-            maxLength={question.props?.maxLength}
-            placeholder={question.props?.placeholder}
+            maxLength={question.props?.maxLength || ''}
+            placeholder={question.props?.placeholder || ''}
             onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
             onRequiredChange={(required) => handleUpdateQuestion(question.id, { required })}
-            onMaxLengthChange={(maxLength) => handleUpdateQuestion(question.id, { 
-              props: { ...question.props, maxLength } 
-            })}
-            onPlaceholderChange={(placeholder) => handleUpdateQuestion(question.id, { 
-              props: { ...question.props, placeholder } 
-            })}
+            onMaxLengthChange={(maxLength) => handleUpdateQuestion(question.id, { props: { ...question.props, maxLength } })}
+            onPlaceholderChange={(placeholder) => handleUpdateQuestion(question.id, { props: { ...question.props, placeholder } })}
           />
         );
       default:
@@ -488,43 +487,7 @@ export default function QualtricsStyleSurveyEditor() {
                 <div className="mb-4">
                   {renderEditor(question)}
                 </div>
-                <div className="flex justify-end">
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      // 현재 에디터의 상태를 가져와서 저장
-                      const state = getCurrentEditorState(question.type);
-                      if (state) {
-                        // 기존 질문의 상태를 유지하면서 업데이트
-                        handleUpdateQuestion(question.id, {
-                          text: state.question || question.text,
-                          required: state.isRequired ?? question.required,
-                          ...(question.type === QuestionType.MULTIPLE_CHOICE && {
-                            options: state.options,
-                            optionCount: state.options?.length || 0
-                          }),
-                          props: {
-                            ...question.props,
-                            ...(question.type === QuestionType.SIDE_BY_SIDE && {
-                              rows: state.rows,
-                              columns: state.columns,
-                              optionCount: state.rows?.length || 0,
-                              columnCount: state.columns?.length || 0,
-                              subColumnCounts: state.columns?.map((col: any) => col.subColumns?.length || 0) || []
-                            }),
-                            ...(question.type === QuestionType.TEXT_ENTRY && {
-                              maxLength: state.maxLength,
-                              placeholder: state.placeholder
-                            })
-                          }
-                        });
-                      }
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
-                  >
-                    저장
-                  </button>
-                </div>
+
               </div>
             )}
           </div>
