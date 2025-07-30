@@ -17,6 +17,10 @@ export function PreviewModal({ isOpen, onClose, questions, onSave }: PreviewModa
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>({});
 
   const handleSaveClick = () => {
+    if (questions.length === 0) {
+      alert('저장할 질문이 없습니다. 질문을 먼저 추가해주세요.');
+      return;
+    }
     setIsSaveModalOpen(true);
   };
 
