@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Navigation from "./components/Navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,37 +28,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <nav className="nav-bg text-white p-4 fixed w-full top-0 z-50">
-          <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-xl font-bold text-white"><a href="/">NPS</a></h1>
-            <ul className="flex space-x-8">
-              {/*<li>*/}
-              {/*  <a href="/" className="hover:text-white/80">Home</a>*/}
-              {/*</li>*/}
-              {/*<li>*/}
-              {/*  <a href="/survey" className="hover:text-white/80">설문조사</a>*/}
-              {/*</li>*/}
-              <li>
-                <a href="/survey2" className="hover:text-white/80">설문조사</a>
-              </li>
-              {/*<li>*/}
-              {/*  <a href="/survey/settings" className="hover:text-white/80">설문조사 설정 (old)</a>*/}
-              {/*</li>*/}
-              <li>
-                <a href="/survey/settings/new-style" className="hover:text-white/80">설문조사 설정 (new)</a>
-              </li>
-              <li>
-                <a href="/survey/settings/new-style-with-modal" className="hover:text-white/80">설문조사 설정 (new with modal)</a>
-              </li>
-              <li>
-                <a href="/survey/test" className="hover:text-white/80">설문 테스트</a>
-              </li>
-              <li>
-                <a href="/survey/results" className="hover:text-white/80">설문 결과</a>
-              </li>
-            </ul>
-          </div>
-        </nav>
+        <Navigation />
         <main className="container mx-auto p-8 flex-1 pt-16">
           {children}
         </main>
