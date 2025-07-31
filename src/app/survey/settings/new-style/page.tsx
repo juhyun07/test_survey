@@ -397,15 +397,15 @@ export default function QualtricsStyleSurveyEditor() {
                   <div className="flex space-x-3">
             <button
               onClick={() => handleAddQuestion(QuestionType.CHECKBOX)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-600 text-sm"
             >
-              복수 선택 (체크박스)
+              복수 선택
             </button>
           <button
             onClick={() => handleAddQuestion(QuestionType.MULTIPLE_CHOICE)}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
           >
-            복수 선택
+            단일 선택
           </button>
           <button
             onClick={() => handleAddQuestion(QuestionType.SIDE_BY_SIDE)}

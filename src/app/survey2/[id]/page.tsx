@@ -337,7 +337,7 @@ export default function SurveyDetailPage() {
         </div>
         <Link 
           href="/survey2" 
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-block"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-600 inline-block"
         >
           목록으로 돌아가기
         </Link>
@@ -412,7 +412,7 @@ export default function SurveyDetailPage() {
         </Link>
         <button
           onClick={handleSubmit}
-          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
         >
           제출하기
         </button>

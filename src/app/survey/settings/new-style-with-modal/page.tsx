@@ -277,25 +277,25 @@ export default function QualtricsStyleSurveyEditor() {
         <div className="flex space-x-4">
           <button
             onClick={() => handleAddQuestion(QuestionType.MULTIPLE_CHOICE)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-600"
           >
             복수 선택 추가
           </button>
           <button
             onClick={() => handleAddQuestion(QuestionType.SIDE_BY_SIDE)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-600"
           >
             병렬 비교 추가
           </button>
           <button
             onClick={() => handleAddQuestion(QuestionType.TEXT_ENTRY)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-600"
           >
             텍스트 답변 추가
           </button>
           <button
             onClick={() => handleAddQuestion(QuestionType.CHECKBOX)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-600"
           >
             체크박스 추가
           </button>
@@ -331,7 +331,7 @@ export default function QualtricsStyleSurveyEditor() {
                 </button>
                 <button
                   onClick={handleSaveQuestion}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-600"
                 >
                   저장
                 </button>

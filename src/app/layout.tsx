@@ -27,22 +27,22 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <nav className="bg-blue-600 text-white p-4 fixed w-full top-0 z-50">
+        <nav className="nav-bg text-white p-4 fixed w-full top-0 z-50">
           <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-xl font-bold text-white"><a href="/">Test-Survey</a></h1>
+            <h1 className="text-xl font-bold text-white"><a href="/">NPS</a></h1>
             <ul className="flex space-x-8">
+              {/*<li>*/}
+              {/*  <a href="/" className="hover:text-white/80">Home</a>*/}
+              {/*</li>*/}
+              {/*<li>*/}
+              {/*  <a href="/survey" className="hover:text-white/80">설문조사</a>*/}
+              {/*</li>*/}
               <li>
-                <a href="/" className="hover:text-white/80">Home</a>
+                <a href="/survey2" className="hover:text-white/80">설문조사</a>
               </li>
-              <li>
-                <a href="/survey" className="hover:text-white/80">설문조사</a>
-              </li>
-              <li>
-                <a href="/survey2" className="hover:text-white/80">설문조사2</a>
-              </li>
-              <li>
-                <a href="/survey/settings" className="hover:text-white/80">설문조사 설정 (old)</a>
-              </li>
+              {/*<li>*/}
+              {/*  <a href="/survey/settings" className="hover:text-white/80">설문조사 설정 (old)</a>*/}
+              {/*</li>*/}
               <li>
                 <a href="/survey/settings/new-style" className="hover:text-white/80">설문조사 설정 (new)</a>
               </li>

@@ -188,7 +188,7 @@ export function PreviewModal({ isOpen, onClose, questions }: PreviewModalProps) 
           <div className="mt-8 flex justify-end">
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-600"
             >
               닫기
             </button>
