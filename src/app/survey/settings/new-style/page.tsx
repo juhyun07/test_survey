@@ -439,10 +439,10 @@ export default function QualtricsStyleSurveyEditor() {
                   {question.text || '새 질문'}
                 </span>
                 <span className="ml-3 text-sm text-gray-500">
-                  ({question.type === QuestionType.MULTIPLE_CHOICE && '복수 선택'}
+                  ({question.type === QuestionType.MULTIPLE_CHOICE && '단일 선택'}
                   {question.type === QuestionType.SIDE_BY_SIDE && '병렬 비교'}
                   {question.type === QuestionType.TEXT_ENTRY && '텍스트 답변'}
-                  {question.type === QuestionType.CHECKBOX && '체크박스'}
+                  {question.type === QuestionType.CHECKBOX && '복수 선택'}
                   )
                 </span>
                 {question.required && (
