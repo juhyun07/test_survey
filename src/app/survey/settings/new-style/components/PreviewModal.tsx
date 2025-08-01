@@ -200,8 +200,9 @@ export function PreviewModal({ isOpen, onClose, questions, onSave }: PreviewModa
                 </h3>
                 {question.required && <span className="text-red-500 ml-2 font-semibold">* 필수</span>}
               </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full border">
+              <div className="relative border rounded-md p-4 bg-white">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse divide-y divide-gray-200">
                   <thead>
                     <tr>
                       <th className="border p-2 bg-gray-100" rowSpan={2} style={{ width: '200px' }}>항목</th>
@@ -242,6 +243,7 @@ export function PreviewModal({ isOpen, onClose, questions, onSave }: PreviewModa
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           );

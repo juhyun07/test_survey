@@ -137,24 +137,24 @@ export default function QualtricsStyleSurveyEditor() {
   };
 
   // 질문 업데이트 핸들러
-  const handleUpdateQuestion = (idOrIndex: string | number, updates: Partial<Question>) => {
-    setQuestions(prev => 
+  const handleUpdateQuestion = (
+    idOrIndex: string | number,
+    updates: Partial<Omit<Question, 'props'>> & { propsUpdater?: (prevProps: any) => any }
+  ) => {
+    setQuestions(prev =>
       prev.map((q, i) => {
-        // ID로 비교하거나 인덱스로 비교
-        const isTarget = typeof idOrIndex === 'string' 
-          ? q.id === idOrIndex 
-          : i === idOrIndex;
-          
+        const isTarget =
+          typeof idOrIndex === 'string' ? q.id === idOrIndex : i === idOrIndex;
+
         if (isTarget) {
-          // props가 있는 경우 기존 props와 병합
-          if (updates.props) {
-            return { 
-              ...q, 
-              ...updates,
-              props: { ...q.props, ...updates.props }
-            };
-          }
-          return { ...q, ...updates };
+          const { propsUpdater, ...otherUpdates } = updates;
+          const newProps = propsUpdater ? propsUpdater(q.props) : q.props;
+
+          return {
+            ...q,
+            ...otherUpdates,
+            props: newProps,
+          };
         }
         return q;
       })
@@ -320,39 +320,40 @@ export default function QualtricsStyleSurveyEditor() {
             columns={question.props?.columns || []}
             onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
             onRequiredChange={(required) => handleUpdateQuestion(question.id, { required })}
-            onRowsChange={(rows) => handleUpdateQuestion(question.id, { 
-              props: { 
-                ...question.props,
-                rows,
-                optionCount: rows.length 
-              } 
-            })}
-            onColumnsChange={(columns) => handleUpdateQuestion(question.id, { 
-              props: { 
-                ...question.props, 
-                columns,
-                subColumnCounts: columns.map(col => col.subColumns.length),
-                columnCount: columns.length
-              } 
-            })}
-            onOptionCountChange={(count) => handleUpdateQuestion(question.id, { 
-              props: { 
-                ...question.props,
-                optionCount: count 
-              } 
-            })}
-            onColumnCountChange={(count) => handleUpdateQuestion(question.id, { 
-              props: { 
-                ...question.props, 
-                columnCount: count 
-              } 
-            })}
-            onSubColumnCountsChange={(counts) => handleUpdateQuestion(question.id, { 
-              props: { 
-                ...question.props, 
-                subColumnCounts: counts 
-              } 
-            })}
+            onRowsChange={(rows) =>
+              handleUpdateQuestion(question.id, {
+                propsUpdater: (prevProps) => ({
+                  ...prevProps,
+                  rows,
+                  optionCount: rows.length,
+                }),
+              })
+            }
+            onColumnsChange={(columns) =>
+              handleUpdateQuestion(question.id, {
+                propsUpdater: (prevProps) => ({
+                  ...prevProps,
+                  columns,
+                  subColumnCounts: columns.map((col) => col.subColumns.length),
+                  columnCount: columns.length,
+                }),
+              })
+            }
+            onOptionCountChange={(count) =>
+              handleUpdateQuestion(question.id, {
+                propsUpdater: (prevProps) => ({ ...prevProps, optionCount: count }),
+              })
+            }
+            onColumnCountChange={(count) =>
+              handleUpdateQuestion(question.id, {
+                propsUpdater: (prevProps) => ({ ...prevProps, columnCount: count }),
+              })
+            }
+            onSubColumnCountsChange={(counts) =>
+              handleUpdateQuestion(question.id, {
+                propsUpdater: (prevProps) => ({ ...prevProps, subColumnCounts: counts }),
+              })
+            }
           />
         );
       case QuestionType.TEXT_ENTRY:
@@ -364,8 +365,16 @@ export default function QualtricsStyleSurveyEditor() {
             placeholder={question.props?.placeholder || ''}
             onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
             onRequiredChange={(required) => handleUpdateQuestion(question.id, { required })}
-            onMaxLengthChange={(maxLength) => handleUpdateQuestion(question.id, { props: { ...question.props, maxLength } })}
-            onPlaceholderChange={(placeholder) => handleUpdateQuestion(question.id, { props: { ...question.props, placeholder } })}
+            onMaxLengthChange={(maxLength) =>
+              handleUpdateQuestion(question.id, {
+                propsUpdater: (prevProps) => ({ ...prevProps, maxLength }),
+              })
+            }
+            onPlaceholderChange={(placeholder) =>
+              handleUpdateQuestion(question.id, {
+                propsUpdater: (prevProps) => ({ ...prevProps, placeholder }),
+              })
+            }
           />
         );
       default:
