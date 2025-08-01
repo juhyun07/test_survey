@@ -83,9 +83,76 @@ const AnswerDisplay = ({ question, answer }: { question: Question; answer: strin
     case QuestionType.TEXT_ENTRY:
       return <p className="text-gray-800 bg-gray-100 p-2 rounded">{answer[0]}</p>;
     
-    case QuestionType.SIDE_BY_SIDE:
-        // This is a simplified display. A more detailed implementation would be needed for a full side-by-side view.
-        return <p className="text-gray-800">Side-by-Side 질문에 대한 답변이 제출되었습니다.</p>;
+    case QuestionType.SIDE_BY_SIDE: {
+      const props = question.props as any;
+      if (!props || !props.rows || !props.columns) {
+        return <p className="text-gray-500">질문 형식이 올바르지 않습니다.</p>;
+      }
+
+      const submittedAnswers: Record<string, string> = {};
+      if (answer && Array.isArray(answer)) {
+        answer.forEach(a => {
+          const parts = a.split(':');
+          if (parts.length >= 2) {
+            submittedAnswers[parts[0]] = parts[1]; // rowId: subColumnId
+          }
+        });
+      }
+
+      return (
+        <div className="relative border rounded-md p-4 bg-white">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 border-collapse">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="w-[200px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 whitespace-nowrap"></th>
+                  {props.columns.map((column: any) => (
+                    <th 
+                      key={column.id} 
+                      colSpan={column.subColumns.length}
+                      className="px-3 py-2 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider"
+                    >
+                      {column.label}
+                    </th>
+                  ))}
+                </tr>
+                <tr>
+                  <th className="w-[200px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 whitespace-nowrap">항목</th>
+                  {props.columns.flatMap((column: any) => 
+                    column.subColumns.map((subCol: any) => (
+                      <th key={subCol.id} className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        {subCol.label}
+                      </th>
+                    ))
+                  )}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {props.rows.map((row: any) => (
+                  <tr key={row.id}>
+                    <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{row.label}</td>
+                    {props.columns.flatMap((col: any) => 
+                      col.subColumns.map((subCol: any) => (
+                        <td key={subCol.id} className="text-center px-3 py-4">
+                          <input
+                            type="radio"
+                            name={`result-${question.id}-${row.id}`}
+                            value={subCol.id}
+                            checked={submittedAnswers[row.id] === subCol.id}
+                            disabled
+                            className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 disabled:opacity-100"
+                          />
+                        </td>
+                      ))
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
 
     default:
       return <p className="text-gray-500">결과를 표시할 수 없는 질문 유형입니다.</p>;
