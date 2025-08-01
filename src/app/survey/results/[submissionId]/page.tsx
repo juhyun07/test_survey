@@ -140,7 +140,7 @@ const AnswerDisplay = ({ question, answer }: { question: Question; answer: strin
                             value={subCol.id}
                             checked={submittedAnswers[row.id] === subCol.id}
                             disabled
-                            className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 disabled:opacity-100"
+                            className={`h-4 w-4 border-gray-300 focus:ring-blue-500 ${submittedAnswers[row.id] === subCol.id ? 'text-blue-600 disabled:opacity-100' : 'text-gray-400 disabled:opacity-50'}`}
                           />
                         </td>
                       ))
