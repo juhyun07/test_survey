@@ -3,10 +3,15 @@
 import { useState, useEffect } from 'react';
 import { SavedSurvey } from '@/app/survey/settings/types';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { PreviewModal } from '@/app/survey/settings/new-style/components/PreviewModal';
 
 export default function SurveyListPage() {
   const [surveys, setSurveys] = useState<SavedSurvey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedSurvey, setSelectedSurvey] = useState<SavedSurvey | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     // 로컬 스토리지에서 저장된 설문지 목록 불러오기
@@ -31,6 +36,15 @@ export default function SurveyListPage() {
       setSurveys(updatedSurveys);
       localStorage.setItem('savedSurveys', JSON.stringify(updatedSurveys));
     }
+  };
+
+  const handlePreviewClick = (survey: SavedSurvey) => {
+    setSelectedSurvey(survey);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (id: string) => {
+    router.push(`/survey2/${id}`);
   };
 
   if (isLoading) {
@@ -93,18 +107,28 @@ export default function SurveyListPage() {
                     >
                       삭제
                     </button>
-                    <Link 
-                      href={`/survey2/${survey.id}`}
+                    <button 
+                      onClick={() => handlePreviewClick(survey)}
                       className="text-blue-600 hover:underline text-sm"
                     >
                       보기
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {selectedSurvey && (
+        <PreviewModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          survey={selectedSurvey}
+          questions={selectedSurvey.questions}
+          onEdit={handleEdit}
+        />
       )}
     </div>
   );

@@ -8,11 +8,13 @@ interface PreviewModalProps {
   onClose: () => void;
   questions: Question[];
   onSave?: (survey: Omit<SavedSurvey, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  survey?: SavedSurvey;
+  onEdit?: (id: string) => void;
 }
 
-export function PreviewModal({ isOpen, onClose, questions, onSave }: PreviewModalProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+export function PreviewModal({ isOpen, onClose, questions, onSave, survey, onEdit }: PreviewModalProps) {
+  const [title, setTitle] = useState(survey?.title || '');
+  const [description, setDescription] = useState(survey?.description || '');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>({});
 
@@ -290,23 +292,36 @@ export function PreviewModal({ isOpen, onClose, questions, onSave }: PreviewModa
         <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
           <div className="p-8">
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-800">설문지 미리보기</h2>
+              {survey ? (
+                <div className="flex-grow">
+                  <h2 className="text-2xl font-bold text-gray-800">{survey.title}</h2>
+                  {survey.description && <p className="text-sm text-gray-600 mt-2">{survey.description}</p>}
+                </div>
+              ) : (
+                <h2 className="text-2xl font-bold text-gray-800">설문지 미리보기</h2>
+              )}
               <div className="flex space-x-4">
                 <button
-                  onClick={handleSaveClick}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  저장하기
-                </button>
-                <button
                   onClick={onClose}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
-                  aria-label="닫기"
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium"
                 >
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  닫기
                 </button>
+                {onEdit && survey ? (
+                  <button
+                    onClick={() => onEdit(survey.id)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    수정하기
+                  </button>
+                ) : onSave ? (
+                  <button
+                    onClick={handleSaveClick}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    저장하기
+                  </button>
+                ) : null}
               </div>
             </div>
             <div className="space-y-6">
