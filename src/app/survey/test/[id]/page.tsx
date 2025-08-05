@@ -75,14 +75,26 @@ const QuestionPreview = ({
             {question.required && <span className="text-red-500 ml-1">*</span>}
           </h3>
           <div className="mt-2">
-            <input
-              type="text"
-              value={answer?.[0] || ''}
-              onChange={(e) => onAnswerChange(e.target.value, question.type)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder={props.placeholder || '답변을 입력하세요'}
-              maxLength={props.maxLength}
-            />
+            {question.props.isLongText ? (
+              <textarea
+                name={String(question.id)}
+                value={answer?.[0] || ''}
+                onChange={(e) => onAnswerChange(e.target.value, question.type)}
+                placeholder={props.placeholder || '답변을 입력하세요'}
+                maxLength={props.maxLength}
+                rows={4}
+                className="w-full p-2 border rounded-md"
+              />
+            ) : (
+              <input
+                type="text"
+                value={answer?.[0] || ''}
+                onChange={(e) => onAnswerChange(e.target.value, question.type)}
+                placeholder={props.placeholder || '답변을 입력하세요'}
+                maxLength={props.maxLength}
+                className="w-full p-2 border rounded-md"
+              />
+            )}
             {props.maxLength && (
               <p className="mt-1 text-xs text-gray-500">
                 최대 {props.maxLength}자까지 입력 가능

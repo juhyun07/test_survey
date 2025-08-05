@@ -239,6 +239,7 @@ export default function QualtricsStyleSurveyEditor() {
           props: {
             maxLength: state.maxLength || 100,
             placeholder: state.placeholder || '답변을 입력하세요',
+            isLongText: state.isLongText || false,
           },
         };
       default:
@@ -363,6 +364,7 @@ export default function QualtricsStyleSurveyEditor() {
             {...commonProps}
             maxLength={question.props?.maxLength || ''}
             placeholder={question.props?.placeholder || ''}
+            isLongText={question.props?.isLongText || false}
             onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
             onRequiredChange={(required) => handleUpdateQuestion(question.id, { required })}
             onMaxLengthChange={(maxLength) =>
@@ -373,6 +375,11 @@ export default function QualtricsStyleSurveyEditor() {
             onPlaceholderChange={(placeholder) =>
               handleUpdateQuestion(question.id, {
                 propsUpdater: (prevProps) => ({ ...prevProps, placeholder }),
+              })
+            }
+            onIsLongTextChange={(isLongText) =>
+              handleUpdateQuestion(question.id, {
+                propsUpdater: (prevProps) => ({ ...prevProps, isLongText }),
               })
             }
           />

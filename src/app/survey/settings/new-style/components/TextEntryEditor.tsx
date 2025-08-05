@@ -5,10 +5,12 @@ interface TextEntryEditorProps {
   isRequired?: boolean;
   maxLength?: number;
   placeholder?: string;
+  isLongText?: boolean;
   onQuestionChange?: (text: string) => void;
   onRequiredChange?: (required: boolean) => void;
   onMaxLengthChange?: (maxLength: number | undefined) => void;
   onPlaceholderChange?: (placeholder: string | undefined) => void;
+  onIsLongTextChange?: (isLongText: boolean) => void;
 }
 
 interface TextEntryEditorRef {
@@ -17,31 +19,38 @@ interface TextEntryEditorRef {
     placeholder: string;
     isRequired: boolean;
     maxLength: number;
+    isLongText: boolean;
   };
 }
 
-export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorProps>(({
-  question: initialQuestion = '',
-  isRequired: initialIsRequired = false,
-  maxLength: initialMaxLength,
-  placeholder: initialPlaceholder,
-  onQuestionChange,
-  onRequiredChange,
-  onMaxLengthChange,
-  onPlaceholderChange,
-}, ref) => {
+export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorProps>((
+  {
+    question: initialQuestion = '',
+    isRequired: initialIsRequired = false,
+    maxLength: initialMaxLength,
+    placeholder: initialPlaceholder,
+    isLongText: initialIsLongText = false,
+    onQuestionChange,
+    onRequiredChange,
+    onMaxLengthChange,
+    onPlaceholderChange,
+    onIsLongTextChange,
+  },
+  ref
+) => {
   const [question, setQuestion] = useState<string>(initialQuestion);
   const [isRequired, setIsRequired] = useState<boolean>(initialIsRequired);
   const [maxLength, setMaxLength] = useState<number | undefined>(initialMaxLength);
   const [placeholder, setPlaceholder] = useState<string | undefined>(initialPlaceholder);
-  const [isLongText, setIsLongText] = useState<boolean>(false);
+  const [isLongText, setIsLongText] = useState<boolean>(initialIsLongText);
 
   useEffect(() => {
     setQuestion(initialQuestion);
     setIsRequired(initialIsRequired);
     setMaxLength(initialMaxLength);
     setPlaceholder(initialPlaceholder);
-  }, [initialQuestion, initialIsRequired, initialMaxLength, initialPlaceholder]);
+    setIsLongText(initialIsLongText);
+  }, [initialQuestion, initialIsRequired, initialMaxLength, initialPlaceholder, initialIsLongText]);
 
   useImperativeHandle(ref, () => ({
     getState: () => ({
@@ -49,6 +58,7 @@ export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorPro
       placeholder: placeholder || '',
       isRequired,
       maxLength: maxLength || 100,
+      isLongText,
     }),
   }));
 
@@ -92,7 +102,11 @@ export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorPro
             type="checkbox"
             id="longText"
             checked={isLongText}
-            onChange={(e) => setIsLongText(e.target.checked)}
+            onChange={(e) => {
+              const newIsLongText = e.target.checked;
+              setIsLongText(newIsLongText);
+              onIsLongTextChange?.(newIsLongText);
+            }}
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
           <label htmlFor="longText" className="ml-2 block text-sm text-gray-700">
@@ -164,4 +178,5 @@ export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorPro
       </div>
     </div>
   );
+
 });

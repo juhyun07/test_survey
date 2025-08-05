@@ -265,12 +265,23 @@ export function PreviewModal({ isOpen, onClose, questions, onSave, survey, onEdi
               {question.required && <span className="text-red-500 ml-2 font-semibold">* 필수</span>}
             </div>
             <div className="mt-2">
-              <input
-                type="text"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                placeholder={teProps.placeholder || '답변을 입력하세요'}
-                disabled
-              />
+              {teProps.isLongText ? (
+                <textarea
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={teProps.placeholder || '답변을 입력하세요'}
+                  maxLength={teProps.maxLength}
+                  rows={4}
+                  disabled
+                />
+              ) : (
+                <input
+                  type="text"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={teProps.placeholder || '답변을 입력하세요'}
+                  maxLength={teProps.maxLength}
+                  disabled
+                />
+              )}
               {teProps.maxLength && (
                 <p className="mt-1 text-xs text-gray-500">
                   최대 {teProps.maxLength}자까지 입력 가능

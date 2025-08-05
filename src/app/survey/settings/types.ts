@@ -45,6 +45,7 @@ export const OPTION_COUNT_RANGE = [1, 4];
 export interface TextEntryQuestionProps extends BaseQuestionProps {
   maxLength?: number;
   placeholder?: string;
+  isLongText?: boolean;
 }
 
 // 질문 유형별 프로퍼티 매핑
