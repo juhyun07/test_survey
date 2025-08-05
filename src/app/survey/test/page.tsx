@@ -87,17 +87,17 @@ export default function SurveyListPage() {
                     {survey.questions.length}개의 질문
                   </span>
                   <div className="flex space-x-2">
-                    <button
+                    {/* <button
                       onClick={(e) => handleDeleteSurvey(survey.id, e)}
                       className="text-red-500 hover:text-red-700 text-sm"
                     >
                       삭제
-                    </button>
+                    </button> */}
                     <Link 
                       href={`/survey/test/${survey.id}`}
                       className="text-blue-600 hover:underline text-sm"
                     >
-                      보기
+                      설문 진행
                     </Link>
                   </div>
                 </div>
