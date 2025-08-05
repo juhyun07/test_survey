@@ -81,7 +81,7 @@ const AnswerDisplay = ({ question, answer }: { question: Question; answer: strin
       );
 
     case QuestionType.TEXT_ENTRY:
-      return <p className="text-gray-800 bg-gray-100 p-2 rounded">{answer[0]}</p>;
+      return <p className="text-gray-800 bg-gray-100 p-2 rounded whitespace-pre-wrap break-words">{answer[0]}</p>;
     
     case QuestionType.SIDE_BY_SIDE: {
       const props = question.props as any;
