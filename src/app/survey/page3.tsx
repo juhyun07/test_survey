@@ -1,7 +1,7 @@
-import { SurveyCompleteProps, SurveyPageState3, SurveyPageProps } from "./types";
+import { SurveyPageState3, SurveyPageProps } from "./types";
 import { useState, useEffect } from 'react';
 
-export default function SurveyPage3({ onNext, onAnswerChange, onComplete }: SurveyPageProps & { onAnswerChange: (page: string, answers: SurveyPageState3) => void } & SurveyCompleteProps) {
+export default function SurveyPage3({ onAnswerChange, onComplete }: SurveyPageProps & { onAnswerChange: (page: string, answers: SurveyPageState3) => void, onComplete: () => void }) {
   const [state, setState] = useState<SurveyPageState3>({
     answer1: "",
     answer2: "",
@@ -9,11 +9,10 @@ export default function SurveyPage3({ onNext, onAnswerChange, onComplete }: Surv
   });
 
   useEffect(() => {
-    let startTime = Date.now();
-    let timer: NodeJS.Timeout;
+    const startTime = Date.now();
 
     // 1초마다 timeSpent 업데이트
-    timer = setInterval(() => {
+    const timer = setInterval(() => {
       const timeSpent = Math.round((Date.now() - startTime) / 1000);
       setState(prev => ({ ...prev, timeSpent }));
     }, 1000);
@@ -29,7 +28,7 @@ export default function SurveyPage3({ onNext, onAnswerChange, onComplete }: Surv
       return;
     }
     onAnswerChange('page3', { ...state, timeSpent: state.timeSpent });
-    onNext();
+    onComplete();
   };
 
   return (

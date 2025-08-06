@@ -1,4 +1,4 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 
 interface Option {
   id: string;
@@ -30,6 +30,9 @@ interface CheckBoxEditorRef {
 const generateUniqueId = () => `option_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
 export const CheckBoxEditor = forwardRef<CheckBoxEditorRef, CheckBoxEditorProps>(({ question: initialQuestion = '', isRequired: initialIsRequired = false, options: initialOptions = [], onQuestionChange, onRequiredChange, onOptionsChange, onOptionCountChange }, ref) => {
+
+  // displayName 설정
+  CheckBoxEditor.displayName = 'CheckBoxEditor';
   const [options, setOptions] = useState<Option[]>(
     initialOptions.length > 0 
       ? initialOptions 

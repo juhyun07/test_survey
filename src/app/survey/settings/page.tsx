@@ -1,9 +1,10 @@
 'use client';
 
 import SurveyEditor from './editor';
+import { Question } from './types';
 
 export default function SurveySettingsPage() {
-  const handleSave = (questions: any[]) => {
+    const handleSave = (questions: Question[]) => {
     // 질문 데이터를 저장하는 로직
     console.log('설문조사가 저장되었습니다:', questions);
   };

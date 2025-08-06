@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Question, QuestionType, MultipleChoiceOption, SideBySideOption, MultipleChoiceQuestionProps, SideBySideQuestionProps, TextEntryQuestionProps } from '../../types';
+import { Question, QuestionType, MultipleChoiceQuestionProps, SideBySideQuestionProps, TextEntryQuestionProps } from '../../types';
 
 interface PreviewModalProps {
   isOpen: boolean;
@@ -46,20 +46,20 @@ export function PreviewModal({ isOpen, onClose, questions }: PreviewModalProps) 
         const renderSideBySidePreview = () => {
           const props = question.props as SideBySideQuestionProps;
           const { 
-            sideBySideOptions = [], 
+            rows = [], 
             columns = [] 
           } = props;
           
-          if (sideBySideOptions.length === 0 || columns.length === 0) {
+          if (rows.length === 0 || columns.length === 0) {
             return <div className="text-gray-500">미리보기 데이터가 없습니다.</div>;
           }
 
           // 모든 컬럼의 서브 컬럼을 평탄화하여 헤더 생성
-          const allSubColumns = columns.flatMap((col, colIndex) => 
-            col.subColumns.map((subCol, subColIndex) => ({
+          const allSubColumns = columns.flatMap((col) => 
+            col.subColumns.map((subCol) => ({
               ...subCol,
-              columnIndex: colIndex,
-              columnTitle: col.label || `열 ${colIndex + 1}`
+              uniqueId: `${col.id}-${subCol.id}`,
+              columnTitle: col.text
             }))
           );
 
@@ -68,40 +68,40 @@ export function PreviewModal({ isOpen, onClose, questions }: PreviewModalProps) 
               <h3 className="text-lg font-medium">미리보기: 병렬 비교 질문</h3>
               <p className="text-gray-700">{question.text}</p>
               <div className="overflow-x-auto">
-                <table className="min-w-full border">
-                  <thead>
+                <table className="min-w-full divide-y divide-gray-200 border-t border-b border-gray-200">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <th className="border p-2 bg-gray-100" rowSpan={2}>항목</th>
-                      {columns.map((col, colIndex) => (
+                      <th className="w-[200px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"></th>
+                      {columns.map((column) => (
                         <th 
-                          key={col.id || colIndex} 
-                          className="border p-2 bg-gray-50"
-                          colSpan={col.subColumns.length}
+                          key={column.id} 
+                          colSpan={column.subColumns.length}
+                          className="px-3 py-2 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider"
                         >
-                          {col.label || `열 ${colIndex + 1}`}
+                          {column.text}
                         </th>
                       ))}
                     </tr>
                     <tr>
-                      {allSubColumns.map((subCol, index) => (
-                        <th key={subCol.id || index} className="border p-2 bg-gray-50 text-sm">
-                          {subCol.label || `옵션 ${index + 1}`}
+                      <th className="w-[200px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 whitespace-nowrap">항목</th>
+                      {allSubColumns.map((subCol) => (
+                        <th key={subCol.uniqueId} className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                          {subCol.label}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody>
-                    {sideBySideOptions.map((option, rowIndex) => (
-                      <tr key={option.id || rowIndex}>
-                        <td className="border p-2 font-medium align-top" rowSpan={1}>
-                          {option.text || `항목 ${rowIndex + 1}`}
-                        </td>
-                        {allSubColumns.map((subCol, subColIndex) => (
-                          <td key={`${subCol.id}-${rowIndex}`} className="border p-2 text-center">
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {rows.map((row) => (
+                      <tr key={row.id}>
+                        <td className="w-[200px] px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.text}</td>
+                        {allSubColumns.map((subCol) => (
+                          <td key={`${row.id}-${subCol.uniqueId}`} className="px-3 py-4 whitespace-nowrap text-center">
                             <input
                               type="radio"
-                              name={`row-${option.id || rowIndex}`}
-                              className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                              name={`preview_${question.id}_${row.id}`}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                              readOnly
                             />
                           </td>
                         ))}
@@ -175,7 +175,7 @@ export function PreviewModal({ isOpen, onClose, questions }: PreviewModalProps) 
                       {question.type === QuestionType.SIDE_BY_SIDE && '병렬 비교'}
                       {question.type === QuestionType.TEXT_ENTRY && '텍스트 답변'}
                     </span>
-                    {question.required && (
+                    {question.isRequired && (
                       <span className="ml-2 text-red-500 text-sm">(필수)</span>
                     )}
                   </div>

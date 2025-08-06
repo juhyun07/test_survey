@@ -1,73 +1,56 @@
 import React, { useState, useImperativeHandle, forwardRef } from 'react';
+import { SideBySideOption as MatrixRow, ColumnGroup as MatrixColumn } from '../../types';
 
-type MatrixRow = {
-  id: string;
-  label: string;
-};
+interface SideBySideEditorProps {
+  initialQuestion?: string;
+  initialIsRequired?: boolean;
+  initialRows?: MatrixRow[];
+  initialColumns?: MatrixColumn[];
+}
 
-type MatrixColumn = {
-  id: string;
-  label: string;
-  subColumns: Array<{
-    id: string;
-    label: string;
-  }>;
-};
-
-interface SideBySideEditorProps {}
-
-interface SideBySideEditorRef {
+export interface SideBySideEditorRef {
   getState: () => {
     question: string;
     isRequired: boolean;
-    rows: MatrixRow[];  // 모든 행 데이터
-    columns: MatrixColumn[];  // 모든 컬럼 데이터
-    sideBySideOptions: Array<{
-      id: string;
-      text: string;
-      descriptionCount: number;
-      columns: Array<{
-        title: string;
-        answers: Array<{
-          id: string;
-          text: string;
-        }>;
-      }>;
-    }>;
-    optionCount: number;
-    columnCount: number;
-    subColumnCounts: number[];
+    rows: MatrixRow[];
+    columns: MatrixColumn[];
   };
 }
 
-export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditorProps>((props, ref) => {
-  const [question, setQuestion] = useState<string>("");
-  const [isRequired, setIsRequired] = useState<boolean>(false);
-  const [rows, setRows] = useState<MatrixRow[]>([
-    { id: 'r1', label: '항목 1' },
-    { id: 'r2', label: '항목 2' },
-  ]);
-  
-  const [columns, setColumns] = useState<MatrixColumn[]>([
-    {
-      id: 'col1',
-      label: '열 1',
-      subColumns: [
-        { id: 'c1', label: '옵션 1' },
-      ]
-    }
-  ]);
+export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditorProps>((
+  {
+    initialQuestion = '',
+    initialIsRequired = false,
+    initialRows = [
+      { id: 'r1', text: '항목 1' },
+      { id: 'r2', text: '항목 2' },
+    ],
+    initialColumns = [
+      {
+        id: 'col1',
+        text: '열 1',
+        subColumns: [{ id: 'c1', label: '옵션 1' }],
+      },
+    ],
+  },
+  ref
+) => {
+  SideBySideEditor.displayName = 'SideBySideEditor';
+  const [question, setQuestion] = useState<string>(initialQuestion);
+  const [isRequired, setIsRequired] = useState<boolean>(initialIsRequired);
+  const [rows, setRows] = useState<MatrixRow[]>(initialRows);
+  const [columns, setColumns] = useState<MatrixColumn[]>(initialColumns);
 
   // 행 추가
   const addRow = () => {
     const newId = `r${Date.now()}`;
-    setRows([...rows, { id: newId, label: `항목 ${rows.length + 1}` }]);
+    setRows([...rows, { id: newId, text: `항목 ${rows.length + 1}` }]);
   };
 
   // 행 업데이트
-  const updateRow = (id: string, newLabel: string) => {
+  const updateRow = (id: string, newText: string) => {
     setRows(rows.map(row => 
-      row.id === id ? { ...row, label: newLabel } : row
+      row.id === id ? { ...row, text: newText } : row
     ));
   };
 
@@ -83,7 +66,7 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
     const newId = `col${Date.now()}`;
     const newColumn: MatrixColumn = {
       id: newId,
-      label: `열 ${columns.length + 1}`,
+      text: `열 ${columns.length + 1}`,
       subColumns: [
         { id: `${newId}-1`, label: '옵션 1' },
       ]
@@ -92,9 +75,9 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
   };
 
   // 열 그룹 레이블 업데이트
-  const updateColumnGroup = (id: string, newLabel: string) => {
-    setColumns(columns.map(column => 
-      column.id === id ? { ...column, label: newLabel } : column
+  const updateColumnGroup = (id: string, newText: string) => {
+    setColumns(columns.map(col => 
+      col.id === id ? { ...col, text: newText } : col
     ));
   };
 
@@ -125,23 +108,18 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
   // 서브 컬럼 삭제
   const removeSubColumn = (columnId: string, subColumnId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    e.preventDefault();
-    
-    setColumns(prevColumns => {
-      const newColumns = prevColumns.map(column => {
-        if (column.id === columnId) {
-          const filtered = column.subColumns.filter(sc => sc.id !== subColumnId);
-          // 마지막 서브 컬럼은 삭제하지 않음
-          if (filtered.length === 0) return column;
+    setColumns(columns.map(column => {
+      if (column.id === columnId) {
+        // 서브 컬럼이 1개 이상일 때만 삭제
+        if (column.subColumns.length > 1) {
           return {
             ...column,
-            subColumns: filtered
+            subColumns: column.subColumns.filter(sc => sc.id !== subColumnId)
           };
         }
-        return column;
-      });
-      return newColumns;
-    });
+      }
+      return column;
+    }));
   };
 
   // 서브 컬럼 레이블 업데이트
@@ -150,8 +128,8 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
       if (column.id === columnId) {
         return {
           ...column,
-          subColumns: column.subColumns.map(sc => 
-            sc.id === subColumnId ? { ...sc, label: newLabel } : sc
+          subColumns: column.subColumns.map(sub => 
+            sub.id === subColumnId ? { ...sub, label: newLabel } : sub
           )
         };
       }
@@ -161,37 +139,12 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
 
   // 외부에서 상태를 가져올 수 있도록 expose
   useImperativeHandle(ref, () => ({
-    getState: () => {
-      const sideBySideOptions = rows.map(row => ({
-        id: row.id,
-        text: row.label,
-        descriptionCount: 0, // 이 값은 실제로는 상태로 관리해야 할 수 있음
-        columns: columns.map(col => ({
-          title: col.label,
-          answers: col.subColumns.map(sc => ({
-            id: sc.id,
-            text: sc.label
-          }))
-        }))
-      }));
-
-      // 각 컬럼 그룹의 서브 컬럼 수 계산
-      const subColumnCounts = columns.map(col => col.subColumns.length);
-
-      return {
-        question,
-        isRequired,
-        rows: [...rows],
-        columns: columns.map(col => ({
-          ...col,
-          subColumns: [...col.subColumns]
-        })),
-        sideBySideOptions,
-        optionCount: rows.length,
-        columnCount: columns.length,
-        subColumnCounts,
-      };
-    },
+    getState: () => ({
+      question,
+      isRequired,
+      rows,
+      columns,
+    }),
   }));
 
   return (
@@ -200,9 +153,9 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
         <label className="block text-sm font-medium text-gray-700 mb-1">질문</label>
         <input
           type="text"
-          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
+          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           placeholder="질문을 입력하세요"
         />
       </div>
@@ -265,7 +218,7 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
                   <th className="w-[200px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 whitespace-nowrap" style={{ width: '200px' }}>
                     <span>항목</span>
                   </th>
-                {columns.map((column, colIndex) => (
+                {columns.map((column) => (
                   <th 
                     key={column.id} 
                     colSpan={column.subColumns.length}
@@ -276,7 +229,7 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
                         <input
                           type="text"
                           className="w-full text-center border-b border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-500 bg-transparent font-semibold"
-                          value={column.label}
+                          value={column.text}
                           onChange={(e) => updateColumnGroup(column.id, e.target.value)}
                         />
                       </div>
@@ -364,7 +317,7 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
                       <input
                         type="text"
                         className="border-0 p-0 focus:ring-0 focus:border-blue-500 block w-full sm:text-sm"
-                        value={row.label}
+                        value={row.text}
                         onChange={(e) => updateRow(row.id, e.target.value)}
                       />
                       {rows.length > 1 && (

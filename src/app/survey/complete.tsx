@@ -1,35 +1,6 @@
-import { SurveyCompleteProps as ImportedSurveyCompleteProps, SurveyResult, SurveyPageState, SurveyPageState2, SurveyPageState3 } from "./types";
+import { SurveyResult, SurveyPageState, SurveyPageState2, SurveyPageState3 } from "./types";
 import { useState } from 'react';
 
-interface SurveyResults {
-  page1: {
-    question1: string;
-    question2: string;
-  };
-  page2: {
-    question1: string;
-    question2: string;
-  };
-  page3: {
-    question1: string;
-    question2: string;
-  };
-}
-
-const initialResults: SurveyResults = {
-  page1: {
-    question1: "",
-    question2: ""
-  },
-  page2: {
-    question1: "",
-    question2: ""
-  },
-  page3: {
-    question1: "",
-    question2: ""
-  }
-};
 
 interface PageQuestions {
   question1: string;

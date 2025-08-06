@@ -1,117 +1,104 @@
 'use client';
 
-import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
-type SideBySideOption = {
-  id: string;
-  text: string;
-  descriptionCount: number;
-  columns: Array<{
-    title: string;
-    answers: Array<{
-      id: string;
-      text: string;
-    }>;
-  }>;
-};
-import { QuestionType, Question } from '../types';
-import { MultipleChoiceEditor } from './components/MultipleChoiceEditor';
-import { SideBySideEditor } from './components/SideBySideEditor';
-import { TextEntryEditor } from './components/TextEntryEditor';
+import { 
+  QuestionType, 
+  Question
+} from '../types';
+import { MultipleChoiceEditor, MultipleChoiceEditorRef } from './components/MultipleChoiceEditor';
+import { SideBySideEditor, SideBySideEditorRef } from './components/SideBySideEditor';
+import { TextEntryEditor, TextEntryEditorRef } from './components/TextEntryEditor';
 import { PreviewModal } from './components/PreviewModal';
 
 // 기본 질문 데이터
 const createNewQuestion = (type: QuestionType): Question => {
-  const id = uuidv4();
   const baseQuestion = {
-    id,
-    type,
+    id: uuidv4(),
     text: '새 질문',
-    required: false,
-    props: {},
+    isRequired: false,
   };
 
   switch (type) {
     case QuestionType.MULTIPLE_CHOICE:
       return {
         ...baseQuestion,
-        options: [
-          { id: uuidv4(), text: '옵션 1' },
-          { id: uuidv4(), text: '옵션 2' },
-        ],
-        optionCount: 2,
-        props: {
-          options: [
-            { id: '1', text: '옵션 1' },
-            { id: '2', text: '옵션 2' },
-          ],
-          optionCount: 2,
-        },
+        type,
+        props: { options: [{ id: uuidv4(), text: '옵션 1' }] },
       };
     case QuestionType.SIDE_BY_SIDE:
-      const sideBySideOption: SideBySideOption = {
-        id: '1',
-        text: '항목 1',
-        descriptionCount: 0,
-        columns: [{
-          title: '기본',
-          answers: [{ id: '1', text: '옵션 1' }]
-        }]
-      };
-      
       return {
         ...baseQuestion,
-        optionCount: 2,
-        columnCount: 2,
+        type,
         props: {
-          sideBySideOptions: [
-            { ...sideBySideOption, id: '1', text: '항목 1' },
-            { ...sideBySideOption, id: '2', text: '항목 2' },
-          ],
-          columns: [
-            {
-              id: 'col1',
-              label: '열 1',
-              subColumns: [
-                { id: 'sub1', label: '옵션 1' },
-                { id: 'sub2', label: '옵션 2' },
-              ],
-            },
-          ],
-          optionCount: 2,
-          columnCount: 2,
-          subColumnCounts: [2],
+          rows: [{ id: uuidv4(), text: '항목 1' }],
+          columns: [{ id: uuidv4(), text: '열 1', subColumns: [{ id: uuidv4(), label: '옵션 1' }] }],
         },
       };
     case QuestionType.TEXT_ENTRY:
       return {
         ...baseQuestion,
-        props: {
-          maxLength: 100,
-          placeholder: '답변을 입력하세요',
-        },
+        type,
+        props: { maxLength: 100, placeholder: '' },
       };
     default:
-      return {
-        ...baseQuestion,
-        type: QuestionType.MULTIPLE_CHOICE,
-        options: [],
-        props: {},
-      };
+      // CHECKBOX or other types can be handled here
+      throw new Error('Unsupported question type');
   }
 };
 
+const initialQuestions: Question[] = [
+  {
+    id: '1',
+    type: QuestionType.MULTIPLE_CHOICE,
+    text: '객관식 질문',
+    isRequired: true,
+    props: {
+      options: [
+        { id: 'opt1', text: '옵션 1' },
+        { id: 'opt2', text: '옵션 2' },
+      ],
+    },
+  },
+  {
+    id: '2',
+    type: QuestionType.SIDE_BY_SIDE,
+    text: '매트릭스 질문',
+    isRequired: false,
+    props: {
+      rows: [
+        { id: 'sbs1', text: '항목 1' },
+        { id: 'sbs2', text: '항목 2' },
+      ],
+      columns: [
+        { id: 'col1', text: '열 1', subColumns: [{ id: 'sub1-1', label: '옵션 1' }] },
+        { id: 'col2', text: '열 2', subColumns: [{ id: 'sub2-1', label: '옵션 1' }] },
+      ],
+    },
+  },
+  {
+    id: '3',
+    type: QuestionType.TEXT_ENTRY,
+    text: '주관식 질문',
+    isRequired: true,
+    props: {
+      maxLength: 100,
+      placeholder: '답변을 입력하세요...',
+    },
+  },
+];
+
 export default function QualtricsStyleSurveyEditor() {
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<Question[]>(initialQuestions);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // 에디터 상태를 저장할 refs
-  const multipleChoiceRef = useRef<{ getState: () => any }>(null);
-  const sideBySideRef = useRef<{ getState: () => any }>(null);
-  const textEntryRef = useRef<{ getState: () => any }>(null);
+  const multipleChoiceRef = useRef<MultipleChoiceEditorRef>(null);
+  const sideBySideRef = useRef<SideBySideEditorRef>(null);
+  const textEntryRef = useRef<TextEntryEditorRef>(null);
 
   const handleAddQuestion = (type: QuestionType) => {
     const newQuestion = createNewQuestion(type);
@@ -152,50 +139,43 @@ export default function QualtricsStyleSurveyEditor() {
     }
   };
 
-  const createQuestionFromState = (type: QuestionType, state: any): Question => {
+  const createQuestionFromState = (type: QuestionType, state: NonNullable<ReturnType<typeof getCurrentEditorState>>): Question => {
     const baseQuestion = {
       id: editingQuestion?.id || uuidv4(),
-      type,
-      text: state.question || '새 질문',
-      required: state.isRequired || false,
-      props: {},
+      text: state.question,
+      isRequired: state.isRequired,
     };
 
     switch (type) {
       case QuestionType.MULTIPLE_CHOICE:
-        return {
-          ...baseQuestion,
-          options: state.options || [],
-          optionCount: state.optionCount || 0,
-          props: {
-            options: state.options || [],
-            optionCount: state.optionCount || 0,
-          },
-        };
+        if ('options' in state) {
+          return {
+            ...baseQuestion,
+            type,
+            props: { options: state.options },
+          };
+        }
+        break;
       case QuestionType.SIDE_BY_SIDE:
-        return {
-          ...baseQuestion,
-          optionCount: state.optionCount || 0,
-          columnCount: state.columnCount || 0,
-          props: {
-            sideBySideOptions: state.sideBySideOptions || [],
-            columns: state.columns || [],
-            optionCount: state.optionCount || 0,
-            columnCount: state.columnCount || 0,
-            subColumnCounts: state.subColumnCounts || [],
-          },
-        };
+        if ('rows' in state && 'columns' in state) {
+          return {
+            ...baseQuestion,
+            type,
+            props: { rows: state.rows, columns: state.columns },
+          };
+        }
+        break;
       case QuestionType.TEXT_ENTRY:
-        return {
-          ...baseQuestion,
-          props: {
-            maxLength: state.maxLength || 100,
-            placeholder: state.placeholder || '답변을 입력하세요',
-          },
-        };
-      default:
-        return baseQuestion;
+        if ('maxLength' in state) {
+          return {
+            ...baseQuestion,
+            type,
+            props: { maxLength: state.maxLength, placeholder: state.placeholder },
+          };
+        }
+        break;
     }
+    throw new Error('Invalid state for question type');
   };
 
   const handlePreview = () => {
@@ -207,28 +187,38 @@ export default function QualtricsStyleSurveyEditor() {
   };
 
   const renderEditor = (question: Question) => {
-    const editorProps = {
-      ref: (ref: any) => {
-        if (question.type === QuestionType.MULTIPLE_CHOICE) {
-          multipleChoiceRef.current = ref;
-        } else if (question.type === QuestionType.SIDE_BY_SIDE) {
-          sideBySideRef.current = ref;
-        } else if (question.type === QuestionType.TEXT_ENTRY) {
-          textEntryRef.current = ref;
-        }
-      },
-      ...(question.props || {})
-    };
-
     switch (question.type) {
       case QuestionType.MULTIPLE_CHOICE:
-        return <MultipleChoiceEditor {...editorProps} />;
+        return (
+          <MultipleChoiceEditor
+            ref={multipleChoiceRef}
+            initialQuestion={question.text}
+            initialIsRequired={question.isRequired}
+            initialOptions={question.props.options}
+          />
+        );
       case QuestionType.SIDE_BY_SIDE:
-        return <SideBySideEditor {...editorProps} />;
+        return (
+          <SideBySideEditor
+            ref={sideBySideRef}
+            initialQuestion={question.text}
+            initialIsRequired={question.isRequired}
+            initialRows={question.props.rows}
+            initialColumns={question.props.columns}
+          />
+        );
       case QuestionType.TEXT_ENTRY:
-        return <TextEntryEditor {...editorProps} />;
+        return (
+          <TextEntryEditor
+            ref={textEntryRef}
+            initialQuestion={question.text}
+            initialIsRequired={question.isRequired}
+            initialPlaceholder={question.props.placeholder}
+            initialMaxLength={question.props.maxLength}
+          />
+        );
       default:
-        return <div>지원하지 않는 질문 유형입니다.</div>;
+        return null;
     }
   };
 

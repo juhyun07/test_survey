@@ -98,6 +98,7 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
   onColumnCountChange,
   onSubColumnCountsChange,
 }, ref) => {
+  SideBySideEditor.displayName = 'SideBySideEditor';
   const [question, setQuestion] = useState<string>(initialQuestion);
   const [isRequired, setIsRequired] = useState<boolean>(initialIsRequired);
   const [rows, setRows] = useState<MatrixRow[]>(initialRows);
@@ -128,12 +129,6 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
     );
     setRows(newRows);
     onRowsChange?.(newRows);
-    
-    // Update the row label in the sideBySideOptions
-    const newSideBySideOptions = newRows.map(row => ({
-      ...row,
-      text: row.label
-    }));
     
     // Update parent state if needed
     if (onOptionCountChange) {
@@ -370,7 +365,7 @@ export const SideBySideEditor = forwardRef<SideBySideEditorRef, SideBySideEditor
                   <th className="w-[200px] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 whitespace-nowrap" style={{ width: '200px' }}>
                     <span>항목</span>
                   </th>
-                {columns.map((column, colIndex) => (
+                {columns.map((column) => (
                   <th 
                     key={column.id} 
                     colSpan={column.subColumns.length}

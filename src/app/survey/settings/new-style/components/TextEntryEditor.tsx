@@ -38,6 +38,7 @@ export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorPro
   },
   ref
 ) => {
+  TextEntryEditor.displayName = 'TextEntryEditor';
   const [question, setQuestion] = useState<string>(initialQuestion);
   const [isRequired, setIsRequired] = useState<boolean>(initialIsRequired);
   const [maxLength, setMaxLength] = useState<number | undefined>(initialMaxLength);

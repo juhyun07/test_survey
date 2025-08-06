@@ -9,11 +9,10 @@ export default function SurveyPage2({ onNext, onAnswerChange }: SurveyPageProps 
   });
 
   useEffect(() => {
-    let startTime = Date.now();
-    let timer: NodeJS.Timeout;
+    const startTime = Date.now();
 
     // 1초마다 timeSpent 업데이트
-    timer = setInterval(() => {
+    const timer = setInterval(() => {
       const timeSpent = Math.round((Date.now() - startTime) / 1000);
       setState(prev => ({ ...prev, timeSpent }));
     }, 1000);

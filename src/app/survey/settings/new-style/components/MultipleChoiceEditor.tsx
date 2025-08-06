@@ -26,6 +26,7 @@ interface MultipleChoiceEditorRef {
 }
 
 export const MultipleChoiceEditor = forwardRef<MultipleChoiceEditorRef, MultipleChoiceEditorProps>(({ question: initialQuestion = '', isRequired: initialIsRequired = false, options: initialOptions = [], onQuestionChange, onRequiredChange, onOptionsChange, onOptionCountChange }, ref) => {
+  MultipleChoiceEditor.displayName = 'MultipleChoiceEditor';
   const [options, setOptions] = useState<Option[]>(
     initialOptions.length > 0 
       ? initialOptions 

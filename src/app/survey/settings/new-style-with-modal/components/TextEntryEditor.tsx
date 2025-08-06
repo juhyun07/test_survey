@@ -1,8 +1,14 @@
 import React, { useState, useImperativeHandle, forwardRef } from 'react';
 
-interface TextEntryEditorProps {}
+interface TextEntryEditorProps {
+  initialQuestion?: string;
+  initialPlaceholder?: string;
+  initialIsRequired?: boolean;
+  initialIsLongText?: boolean;
+  initialMaxLength?: number;
+}
 
-interface TextEntryEditorRef {
+export interface TextEntryEditorRef {
   getState: () => {
     question: string;
     placeholder: string;
@@ -11,12 +17,22 @@ interface TextEntryEditorRef {
   };
 }
 
-export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorProps>((props, ref) => {
-  const [question, setQuestion] = useState<string>("");
-  const [placeholder, setPlaceholder] = useState<string>("");
-  const [isRequired, setIsRequired] = useState<boolean>(false);
-  const [isLongText, setIsLongText] = useState<boolean>(false);
-  const [maxLength, setMaxLength] = useState<number>(100);
+export const TextEntryEditor = forwardRef<TextEntryEditorRef, TextEntryEditorProps>((
+  {
+    initialQuestion = '',
+    initialPlaceholder = '',
+    initialIsRequired = false,
+    initialIsLongText = false,
+    initialMaxLength = 100,
+  },
+  ref
+) => {
+  TextEntryEditor.displayName = 'TextEntryEditor';
+  const [question, setQuestion] = useState<string>(initialQuestion);
+  const [placeholder, setPlaceholder] = useState<string>(initialPlaceholder);
+  const [isRequired, setIsRequired] = useState<boolean>(initialIsRequired);
+  const [isLongText, setIsLongText] = useState<boolean>(initialIsLongText);
+  const [maxLength, setMaxLength] = useState<number>(initialMaxLength);
 
   // 외부에서 상태를 가져올 수 있도록 expose
   useImperativeHandle(ref, () => ({

@@ -9,14 +9,12 @@ export enum QuestionType {
 // 각 질문 유형별 추가 프로퍼티 인터페이스
 // 모든 질문 유형에 공통으로 사용될 수 있는 속성들
 export interface BaseQuestionProps {
-  options?: any[];
   optionCount?: number;
-  [key: string]: any;
 }
 
 export interface MultipleChoiceQuestionProps extends BaseQuestionProps {
   options: MultipleChoiceOption[];
-  optionCount: number;
+  optionCount?: number;
 }
 
 export interface SubColumn {
@@ -26,15 +24,15 @@ export interface SubColumn {
 
 export interface ColumnGroup {
   id: string;
-  label: string;
+  text: string;
   subColumns: SubColumn[];
 }
 
 export interface SideBySideQuestionProps extends BaseQuestionProps {
-  sideBySideOptions: SideBySideOption[];
-  optionCount: number;
-  columnCount: number;
-  subColumnCounts: number[];
+  rows: SideBySideOption[];
+  optionCount?: number;
+  columnCount?: number;
+  subColumnCounts?: number[];
   columns: ColumnGroup[];
 }
 
@@ -66,28 +64,20 @@ export interface MultipleChoiceOption {
 export interface SideBySideOption {
   id: string;
   text: string;
-  descriptionCount: number;
-  columns: Array<{
-    title: string;
-    answers: Array<{
-      id: string;
-      text: string;
-    }>;
-  }>;
 }
 
-export interface Question {
+export type Question = {
   id: string;
   type: QuestionType;
   text: string;
-  required: boolean;
-  exportTag?: string;
-  options?: any[];
-  optionCount?: number;
-  columnCount?: number;
-  isExpanded?: boolean;
-  props?: any;
-}
+  isRequired?: boolean;
+} & (
+  | { type: QuestionType.MULTIPLE_CHOICE; props: MultipleChoiceQuestionProps }
+  | { type: QuestionType.MULTIPLE_CHOICE_MULTIPLE; props: MultipleChoiceQuestionProps }
+  | { type: QuestionType.SIDE_BY_SIDE; props: SideBySideQuestionProps }
+  | { type: QuestionType.TEXT_ENTRY; props: TextEntryQuestionProps }
+  | { type: QuestionType.CHECKBOX; props: { options: MultipleChoiceOption[] } }
+);
 
 export interface SavedSurvey {
   id: string;

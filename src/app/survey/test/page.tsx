@@ -71,8 +71,17 @@ export default function SurveyListPage() {
               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-gray-100"
             >
               <div className="p-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-blue-600 truncate">{survey.title}</h3>
+                  <button 
+                    style={{ display: 'none' }}
+                    onClick={(e) => handleDeleteSurvey(survey.id, e)}
+                    className="ml-4 px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    삭제
+                  </button>
+                </div>
                 <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-xl font-bold text-gray-800">{survey.title}</h2>
                   <span className="text-sm text-gray-500">
                     {new Date(survey.createdAt).toLocaleDateString()}
                   </span>

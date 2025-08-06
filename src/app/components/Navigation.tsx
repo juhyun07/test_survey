@@ -3,11 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-interface NavigationProps {
-  children?: React.ReactNode;
-}
-
-export default function Navigation({ children }: NavigationProps) {
+export default function Navigation() {
   const [selectedPath, setSelectedPath] = useState<string>("/survey2");
 
   const navItems = [

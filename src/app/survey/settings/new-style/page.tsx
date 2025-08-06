@@ -1,20 +1,9 @@
 'use client';
 
-import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
-type SideBySideOption = {
-  id: string;
-  text: string;
-  descriptionCount: number;
-  columns: Array<{
-    title: string;
-    answers: Array<{
-      id: string;
-      text: string;
-    }>;
-  }>;
-};
+
 import { Question, QuestionType, SavedSurvey } from '../types';
 import { MultipleChoiceEditor } from './components/MultipleChoiceEditor';
 import { CheckBoxEditor } from './components/CheckBoxEditor';
@@ -22,31 +11,49 @@ import { SideBySideEditor } from './components/SideBySideEditor';
 import { TextEntryEditor } from './components/TextEntryEditor';
 import { PreviewModal } from './components/PreviewModal';
 
+type EditorQuestion = Question & { isExpanded?: boolean };
+
 // 기본 질문 데이터
-const createNewQuestion = (type: QuestionType): Question => {
+const createNewQuestion = (type: QuestionType): EditorQuestion => {
   const id = uuidv4();
   const baseQuestion = {
     id,
-    type,
     text: '새 질문',
-    required: false,
-    props: {},
+    isRequired: false,
   };
 
   switch (type) {
     case QuestionType.CHECKBOX:
+      return {
+        ...baseQuestion,
+        type: QuestionType.CHECKBOX,
+        props: {
+          options: [
+            { id: uuidv4(), text: '옵션 1' },
+            { id: uuidv4(), text: '옵션 2' },
+          ],
+        },
+      };
+    case QuestionType.MULTIPLE_CHOICE_MULTIPLE:
+      return {
+        ...baseQuestion,
+        type: QuestionType.MULTIPLE_CHOICE_MULTIPLE,
+        props: {
+          options: [
+            { id: uuidv4(), text: '옵션 1' },
+            { id: uuidv4(), text: '옵션 2' },
+          ],
+          optionCount: 2,
+        },
+      };
     case QuestionType.MULTIPLE_CHOICE:
       return {
         ...baseQuestion,
-        options: [
-          { id: uuidv4(), text: '옵션 1' },
-          { id: uuidv4(), text: '옵션 2' },
-        ],
-        optionCount: 2,
+        type: QuestionType.MULTIPLE_CHOICE,
         props: {
           options: [
-            { id: '1', text: '옵션 1' },
-            { id: '2', text: '옵션 2' },
+            { id: uuidv4(), text: '옵션 1' },
+            { id: uuidv4(), text: '옵션 2' },
           ],
           optionCount: 2,
         },
@@ -54,56 +61,48 @@ const createNewQuestion = (type: QuestionType): Question => {
     case QuestionType.SIDE_BY_SIDE:
       return {
         ...baseQuestion,
-        optionCount: 2,
-        columnCount: 2,
+        type: QuestionType.SIDE_BY_SIDE,
         props: {
           rows: [
-            { id: 'r1', label: '항목 1' },
-            { id: 'r2', label: '항목 2' },
+            { id: uuidv4(), text: '항목 1' },
+            { id: uuidv4(), text: '항목 2' },
           ],
           columns: [
             {
-              id: 'c1',
-              label: '열 1',
-              subColumns: [
-                { id: 'c1-1', label: '옵션 1' },
-                { id: 'c1-2', label: '옵션 2' },
-              ],
+              id: uuidv4(),
+              text: '열 1',
+              subColumns: [{ id: uuidv4(), label: '하위 열 1-1' }],
             },
             {
-              id: 'c2',
-              label: '열 2',
-              subColumns: [
-                { id: 'c2-1', label: '옵션 1' },
-                { id: 'c2-2', label: '옵션 2' },
-              ],
+              id: uuidv4(),
+              text: '열 2',
+              subColumns: [{ id: uuidv4(), label: '하위 열 2-1' }],
             },
           ],
           optionCount: 2,
           columnCount: 2,
-          subColumnCounts: [2, 2],
+          subColumnCounts: [1, 1],
         },
       };
     case QuestionType.TEXT_ENTRY:
       return {
         ...baseQuestion,
+        type: QuestionType.TEXT_ENTRY,
         props: {
           maxLength: 100,
           placeholder: '답변을 입력하세요',
+          isLongText: false,
         },
       };
     default:
-      return {
-        ...baseQuestion,
-        type: QuestionType.MULTIPLE_CHOICE,
-        options: [],
-        props: {},
-      };
+      // Exhaustive check
+      const _exhaustiveCheck: never = type;
+      throw new Error(`Unhandled question type: ${_exhaustiveCheck}`);
   }
 };
 
 export default function QualtricsStyleSurveyEditor() {
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<EditorQuestion[]>([]);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   // 질문 펼침/접기 상태 토글
@@ -138,34 +137,19 @@ export default function QualtricsStyleSurveyEditor() {
 
   // 질문 업데이트 핸들러
   const handleUpdateQuestion = (
-    idOrIndex: string | number,
-    updates: Partial<Omit<Question, 'props'>> & { propsUpdater?: (prevProps: any) => any }
+    questionId: string,
+    updates: Partial<EditorQuestion>
   ) => {
     setQuestions(prev =>
-      prev.map((q, i) => {
-        const isTarget =
-          typeof idOrIndex === 'string' ? q.id === idOrIndex : i === idOrIndex;
-
-        if (isTarget) {
-          const { propsUpdater, ...otherUpdates } = updates;
-          const newProps = propsUpdater ? propsUpdater(q.props) : q.props;
-
-          return {
-            ...q,
-            ...otherUpdates,
-            props: newProps,
-          };
-        }
-        return q;
-      })
+      prev.map(q => (q.id === questionId ? { ...q, ...updates } as EditorQuestion : q))
     );
   };
 
   // 에디터 상태를 저장할 refs
-  const multipleChoiceRef = useRef<{ getState: () => any }>(null);
-  const sideBySideRef = useRef<{ getState: () => any }>(null);
-    const textEntryRef = useRef<{ getState: () => any }>(null);
-  const checkBoxRef = useRef<{ getState: () => any }>(null);
+  const multipleChoiceRef = useRef<{ getState: () => Question['props'] }>(null);
+  const sideBySideRef = useRef<{ getState: () => Question['props'] }>(null);
+  const textEntryRef = useRef<{ getState: () => Question['props'] }>(null);
+  const checkBoxRef = useRef<{ getState: () => Question['props'] }>(null);
 
   const handleAddQuestion = (type: QuestionType) => {
     const newQuestion = createNewQuestion(type);
@@ -178,74 +162,9 @@ export default function QualtricsStyleSurveyEditor() {
     setQuestions(prev => prev.filter((_, i) => i !== index));
   };
 
-  // 현재 에디터의 상태를 가져오는 함수
-  const getCurrentEditorState = (type: QuestionType) => {
-    switch (type) {
-      case QuestionType.MULTIPLE_CHOICE:
-        return multipleChoiceRef.current?.getState?.();
-      case QuestionType.SIDE_BY_SIDE:
-        return sideBySideRef.current?.getState?.();
-      case QuestionType.TEXT_ENTRY:
-        return textEntryRef.current?.getState?.();
-      default:
-        return null;
-    }
-  };
 
-  // 상태 객체로부터 질문 객체 생성
-  const createQuestionFromState = (type: QuestionType, state: any, existingQuestion?: Question): Question => {
-    // 기존 질문이 있으면 해당 ID와 isExpanded 상태를 유지
-    const baseQuestion: Question = {
-      id: existingQuestion?.id || uuidv4(),
-      type,
-      text: state.question || '새 질문',
-      required: state.isRequired || false,
-      isExpanded: existingQuestion?.isExpanded ?? true,
-      options: [],
-      optionCount: 0,
-      props: {},
-    };
 
-    switch (type) {
-      case QuestionType.CHECKBOX:
-      case QuestionType.MULTIPLE_CHOICE:
-        return {
-          ...baseQuestion,
-          options: state.options || [],
-          optionCount: state.options?.length || 0,
-          props: {
-            ...baseQuestion.props,
-            options: state.options || [],
-            optionCount: state.options?.length || 0,
-          },
-        };
-      case QuestionType.SIDE_BY_SIDE:
-        return {
-          ...baseQuestion,
-          optionCount: state.rows?.length || 0,
-          columnCount: state.columns?.length || 0,
-          props: {
-            ...baseQuestion.props,
-            rows: state.rows || [],
-            columns: state.columns || [],
-            optionCount: state.rows?.length || 0,
-            columnCount: state.columns?.length || 0,
-            subColumnCounts: state.columns?.map((col: any) => col.subColumns?.length || 0) || [],
-          },
-        };
-      case QuestionType.TEXT_ENTRY:
-        return {
-          ...baseQuestion,
-          props: {
-            maxLength: state.maxLength || 100,
-            placeholder: state.placeholder || '답변을 입력하세요',
-            isLongText: state.isLongText || false,
-          },
-        };
-      default:
-        return baseQuestion;
-    }
-  };
+
 
   const handlePreview = () => {
     setIsPreviewOpen(true);
@@ -255,9 +174,9 @@ export default function QualtricsStyleSurveyEditor() {
     setIsPreviewOpen(false);
   };
 
-  const renderEditor = (question: Question) => {
+  const renderEditor = (question: EditorQuestion) => {
     const commonProps = {
-      ref: (ref: any) => {
+      ref: (ref: { getState: () => Question['props'] } | null) => {
         switch (question.type) {
           case QuestionType.MULTIPLE_CHOICE:
             multipleChoiceRef.current = ref;
@@ -274,116 +193,53 @@ export default function QualtricsStyleSurveyEditor() {
         }
       },
       question: question.text,
-      isRequired: question.required,
+      isRequired: question.isRequired,
     };
 
     switch (question.type) {
       case QuestionType.CHECKBOX:
-        return (
-          <CheckBoxEditor
-            key={question.id}
-            {...commonProps}
-            options={question.options || []}
-            onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
-            onRequiredChange={(required) => handleUpdateQuestion(question.id, { required })}
-            onOptionsChange={(options) => handleUpdateQuestion(question.id, { 
-              options, 
-              optionCount: options.length 
-            })}
-            onOptionCountChange={(count) => handleUpdateQuestion(question.id, { 
-              optionCount: count 
-            })}
-          />
-        );
       case QuestionType.MULTIPLE_CHOICE:
-        return (
-          <MultipleChoiceEditor
-            key={question.id}
-            {...commonProps}
-            options={question.options || []}
+      case QuestionType.MULTIPLE_CHOICE_MULTIPLE:
+        if (question.type === QuestionType.CHECKBOX) {
+          return <CheckBoxEditor {...commonProps}
+            options={question.props.options || []}
             onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
-            onRequiredChange={(required) => handleUpdateQuestion(question.id, { required })}
-            onOptionsChange={(options) => handleUpdateQuestion(question.id, { 
-              options, 
-              optionCount: options.length 
-            })}
-            onOptionCountChange={(count) => handleUpdateQuestion(question.id, { 
-              optionCount: count 
-            })}
-          />
-        );
+            onRequiredChange={(isRequired) => handleUpdateQuestion(question.id, { isRequired })}
+            onOptionsChange={(options) => handleUpdateQuestion(question.id, { props: { ...question.props, options } })} />;
+        } else {
+          return <MultipleChoiceEditor {...commonProps}
+            options={question.props.options || []}
+            onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
+            onRequiredChange={(isRequired) => handleUpdateQuestion(question.id, { isRequired })}
+            onOptionsChange={(options) => handleUpdateQuestion(question.id, { props: { ...question.props, options, optionCount: options.length } })} />;
+        }
+        break;
       case QuestionType.SIDE_BY_SIDE:
-        return (
-          <SideBySideEditor
-            key={question.id}
-            {...commonProps}
-            rows={question.props?.rows || []}
-            columns={question.props?.columns || []}
-            onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
-            onRequiredChange={(required) => handleUpdateQuestion(question.id, { required })}
-            onRowsChange={(rows) =>
-              handleUpdateQuestion(question.id, {
-                propsUpdater: (prevProps) => ({
-                  ...prevProps,
-                  rows,
-                  optionCount: rows.length,
-                }),
-              })
-            }
-            onColumnsChange={(columns) =>
-              handleUpdateQuestion(question.id, {
-                propsUpdater: (prevProps) => ({
-                  ...prevProps,
-                  columns,
-                  subColumnCounts: columns.map((col) => col.subColumns.length),
-                  columnCount: columns.length,
-                }),
-              })
-            }
-            onOptionCountChange={(count) =>
-              handleUpdateQuestion(question.id, {
-                propsUpdater: (prevProps) => ({ ...prevProps, optionCount: count }),
-              })
-            }
-            onColumnCountChange={(count) =>
-              handleUpdateQuestion(question.id, {
-                propsUpdater: (prevProps) => ({ ...prevProps, columnCount: count }),
-              })
-            }
-            onSubColumnCountsChange={(counts) =>
-              handleUpdateQuestion(question.id, {
-                propsUpdater: (prevProps) => ({ ...prevProps, subColumnCounts: counts }),
-              })
-            }
-          />
-        );
+        if (question.type === QuestionType.SIDE_BY_SIDE) {
+            return <SideBySideEditor {...commonProps} 
+              rows={(question.props.rows || []).map(r => ({ id: r.id, label: r.text }))} 
+              columns={(question.props.columns || []).map(c => ({ ...c, label: c.text }))} 
+              onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
+              onRequiredChange={(isRequired) => handleUpdateQuestion(question.id, { isRequired })}
+              onRowsChange={(rows) => handleUpdateQuestion(question.id, { props: { ...question.props, rows: rows.map(r => ({ id: r.id, text: r.label })) } })}
+              onColumnsChange={(columns) => handleUpdateQuestion(question.id, { props: { ...question.props, columns: columns.map(c => ({ ...c, text: c.label })), columnCount: columns.length, subColumnCounts: columns.map(c => c.subColumns.length) } })}
+            />;
+        }
+        break;
       case QuestionType.TEXT_ENTRY:
-        return (
-          <TextEntryEditor
-            key={question.id}
-            {...commonProps}
-            maxLength={question.props?.maxLength || ''}
-            placeholder={question.props?.placeholder || ''}
-            isLongText={question.props?.isLongText || false}
-            onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
-            onRequiredChange={(required) => handleUpdateQuestion(question.id, { required })}
-            onMaxLengthChange={(maxLength) =>
-              handleUpdateQuestion(question.id, {
-                propsUpdater: (prevProps) => ({ ...prevProps, maxLength }),
-              })
-            }
-            onPlaceholderChange={(placeholder) =>
-              handleUpdateQuestion(question.id, {
-                propsUpdater: (prevProps) => ({ ...prevProps, placeholder }),
-              })
-            }
-            onIsLongTextChange={(isLongText) =>
-              handleUpdateQuestion(question.id, {
-                propsUpdater: (prevProps) => ({ ...prevProps, isLongText }),
-              })
-            }
-          />
-        );
+        if (question.type === QuestionType.TEXT_ENTRY) {
+            return <TextEntryEditor {...commonProps} 
+              maxLength={question.props.maxLength || undefined} 
+              placeholder={question.props.placeholder || ''} 
+              isLongText={question.props.isLongText || false}
+              onQuestionChange={(text) => handleUpdateQuestion(question.id, { text })}
+              onRequiredChange={(isRequired) => handleUpdateQuestion(question.id, { isRequired })}
+              onMaxLengthChange={(maxLength) => handleUpdateQuestion(question.id, { props: { ...question.props, maxLength } })}
+              onPlaceholderChange={(placeholder) => handleUpdateQuestion(question.id, { props: { ...question.props, placeholder } })}
+              onIsLongTextChange={(isLongText) => handleUpdateQuestion(question.id, { props: { ...question.props, isLongText } })}
+            />;
+        }
+        break;
       default:
         return null;
     }
@@ -461,7 +317,7 @@ export default function QualtricsStyleSurveyEditor() {
                   {question.type === QuestionType.CHECKBOX && '복수 선택'}
                   )
                 </span>
-                {question.required && (
+                {question.isRequired && (
                   <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
                     필수
                   </span>

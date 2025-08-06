@@ -5,9 +5,13 @@ interface Option {
   text: string;
 }
 
-interface MultipleChoiceEditorProps {}
+interface MultipleChoiceEditorProps {
+  initialQuestion?: string;
+  initialIsRequired?: boolean;
+  initialOptions?: Option[];
+}
 
-interface MultipleChoiceEditorRef {
+export interface MultipleChoiceEditorRef {
   getState: () => {
     options: { id: string; text: string }[];
     optionCount: number;
@@ -16,28 +20,34 @@ interface MultipleChoiceEditorRef {
   };
 }
 
-export const MultipleChoiceEditor = forwardRef<MultipleChoiceEditorRef, MultipleChoiceEditorProps>((props, ref) => {
-  const [options, setOptions] = useState<Option[]>([
-    { id: '1', text: '옵션 1' },
-    { id: '2', text: '옵션 2' },
-  ]);
-  const [optionCount, setOptionCount] = useState(2);
-  const [question, setQuestion] = useState<string>("");
-  const [isRequired, setIsRequired] = useState<boolean>(false);
+export const MultipleChoiceEditor = forwardRef<MultipleChoiceEditorRef, MultipleChoiceEditorProps>((
+  {
+    initialQuestion = '',
+    initialIsRequired = false,
+    initialOptions = [
+      { id: '1', text: '옵션 1' },
+      { id: '2', text: '옵션 2' },
+    ],
+  },
+  ref
+) => {
+  MultipleChoiceEditor.displayName = 'MultipleChoiceEditor';
+  const [options, setOptions] = useState<Option[]>(initialOptions);
+  const [question, setQuestion] = useState<string>(initialQuestion);
+  const [isRequired, setIsRequired] = useState<boolean>(initialIsRequired);
 
   useImperativeHandle(ref, () => ({
     getState: () => ({
       options,
-      optionCount,
+      optionCount: options.length,
       question,
       isRequired,
     }),
   }));
 
   const addOption = () => {
-    const newId = (options.length + 1).toString();
-    setOptions([...options, { id: newId, text: `옵션 ${newId}` }]);
-    setOptionCount(optionCount + 1);
+    const newId = `option-${Date.now()}`;
+    setOptions([...options, { id: newId, text: `옵션 ${options.length + 1}` }]);
   };
 
   const updateOption = (id: string, text: string) => {
@@ -49,7 +59,6 @@ export const MultipleChoiceEditor = forwardRef<MultipleChoiceEditorRef, Multiple
   const removeOption = (id: string) => {
     if (options.length > 1) {
       setOptions(options.filter(option => option.id !== id));
-      setOptionCount(optionCount - 1);
     }
   };
 

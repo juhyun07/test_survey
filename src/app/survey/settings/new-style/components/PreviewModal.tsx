@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Question, QuestionType, MultipleChoiceOption, SideBySideOption, MultipleChoiceQuestionProps, SideBySideQuestionProps, TextEntryQuestionProps, SavedSurvey } from '../../types';
+import { Question, QuestionType, MultipleChoiceOption, MultipleChoiceQuestionProps, TextEntryQuestionProps, SavedSurvey, SideBySideQuestionProps, ColumnGroup, SubColumn, SideBySideOption } from '../../types';
 
 interface PreviewModalProps {
   isOpen: boolean;
@@ -113,7 +113,8 @@ export function PreviewModal({ isOpen, onClose, questions, onSave, survey, onEdi
       case QuestionType.MULTIPLE_CHOICE:
       case QuestionType.MULTIPLE_CHOICE_MULTIPLE: {
         // 현재 질문의 옵션을 그대로 사용
-        const options = question.options || [];
+        const props = question.props as MultipleChoiceQuestionProps;
+        const options = props.options || [];
         const isMultiple = question.type === QuestionType.MULTIPLE_CHOICE_MULTIPLE || question.type === QuestionType.CHECKBOX;
 
         const handleOptionToggle = (questionId: string, optionId: string) => {
@@ -166,7 +167,7 @@ export function PreviewModal({ isOpen, onClose, questions, onSave, survey, onEdi
               <h3 className="text-lg font-medium">
                 {questionNumber}. {question.text}
               </h3>
-              {question.required && <span className="text-red-500 ml-2 font-semibold">* 필수</span>}
+              {question.isRequired && <span className="text-red-500 ml-2 font-semibold">* 필수</span>}
             </div>
             <div className="space-y-2 mt-2 ml-4">
               {renderOptions(options)}
@@ -177,7 +178,7 @@ export function PreviewModal({ isOpen, onClose, questions, onSave, survey, onEdi
       
       case QuestionType.SIDE_BY_SIDE: {
         const renderSideBySidePreview = () => {
-          const props = question.props as any;
+          const props = question.props as SideBySideQuestionProps;
           const rows = props.rows || [];
           const columns = props.columns || [];
           
@@ -186,10 +187,10 @@ export function PreviewModal({ isOpen, onClose, questions, onSave, survey, onEdi
           }
 
           // 모든 컬럼의 서브 컬럼을 평탄화하여 헤더 생성
-          const allSubColumns = columns.flatMap((col: any) => 
-            (col.subColumns || []).map((subCol: any) => ({
+          const allSubColumns = columns.flatMap((col: ColumnGroup) => 
+            (col.subColumns || []).map((subCol: SubColumn) => ({
               ...subCol,
-              columnTitle: col.label || `열 ${col.id || ''}`,
+              columnTitle: col.text || `열 ${col.id || ''}`,
               columnId: col.id
             }))
           );
@@ -200,7 +201,7 @@ export function PreviewModal({ isOpen, onClose, questions, onSave, survey, onEdi
                 <h3 className="text-lg font-medium">
                   {questionNumber}. {question.text}
                 </h3>
-                {question.required && <span className="text-red-500 ml-2 font-semibold">* 필수</span>}
+                {question.isRequired && <span className="text-red-500 ml-2 font-semibold">* 필수</span>}
               </div>
               <div className="relative border rounded-md p-4 bg-white">
                 <div className="overflow-x-auto">
@@ -208,18 +209,18 @@ export function PreviewModal({ isOpen, onClose, questions, onSave, survey, onEdi
                   <thead>
                     <tr>
                       <th className="border p-2 bg-gray-100" rowSpan={2} style={{ width: '200px' }}>항목</th>
-                      {columns.map((col: any, colIndex: number) => (
+                      {columns.map((col: ColumnGroup, colIndex: number) => (
                         <th 
                           key={col.id || colIndex} 
                           className="border p-2 bg-gray-50"
                           colSpan={(col.subColumns || []).length}
                         >
-                          {col.label || `열 ${colIndex + 1}`}
+                          {col.text || `열 ${colIndex + 1}`}
                         </th>
                       ))}
                     </tr>
                     <tr>
-                      {allSubColumns.map((subCol: any, index: number) => (
+                      {allSubColumns.map((subCol: SubColumn & { columnId: string }, index: number) => (
                         <th key={subCol.id || index} className="border p-2 bg-gray-50 text-sm">
                           {subCol.label || `옵션 ${index + 1}`}
                         </th>
@@ -227,12 +228,12 @@ export function PreviewModal({ isOpen, onClose, questions, onSave, survey, onEdi
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((row: any, rowIndex: number) => (
+                    {rows.map((row: SideBySideOption, rowIndex: number) => (
                       <tr key={row.id || rowIndex}>
                         <td className="border p-2 font-medium align-top" style={{ width: '200px' }}>
-                          {row.label || `항목 ${rowIndex + 1}`}
+                          {row.text || `항목 ${rowIndex + 1}`}
                         </td>
-                        {allSubColumns.map((subCol: any) => (
+                        {allSubColumns.map((subCol: SubColumn & { columnId: string }) => (
                           <td key={`${subCol.columnId}-${subCol.id}-${row.id}`} className="border p-2 text-center">
                             <input
                               type="radio"
@@ -262,7 +263,7 @@ export function PreviewModal({ isOpen, onClose, questions, onSave, survey, onEdi
               <h3 className="text-lg font-medium">
                 {questionNumber}. {question.text}
               </h3>
-              {question.required && <span className="text-red-500 ml-2 font-semibold">* 필수</span>}
+              {question.isRequired && <span className="text-red-500 ml-2 font-semibold">* 필수</span>}
             </div>
             <div className="mt-2">
               {teProps.isLongText ? (
