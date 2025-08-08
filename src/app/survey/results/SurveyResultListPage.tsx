@@ -33,6 +33,16 @@ export default function SurveyResultListPage(_props: PageComponentProps) {
     loadResults();
   }, []);
 
+  const handleViewResults = (submissionId: string) => {
+        const url = `#/${submissionId}?popup=true`;
+    const width = 800;
+    const height = 700;
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
+    const windowFeatures = `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`;
+    window.open(url, `survey-result-${submissionId}`, windowFeatures);
+  };
+
   const handleDelete = (submissionId: string) => {
     if (confirm('정말로 이 설문 결과를 삭제하시겠습니까?')) {
       try {
@@ -72,7 +82,7 @@ export default function SurveyResultListPage(_props: PageComponentProps) {
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Link href={`#/${result.submissionId}`} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">결과 보기</Link>
+                                        <button onClick={() => handleViewResults(result.submissionId)} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">결과 보기</button>
                     <button 
                       onClick={() => handleDelete(result.submissionId)}
                       className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"

@@ -48,12 +48,12 @@ export const HashRouterProvider: React.FC<HashRouterProviderProps> = ({
 }) => {
   const [currentPath, setCurrentPath] = useState(() => {
     if (typeof window === 'undefined') return '';
-    return window.location.hash.replace(/^#\/?/, '');
+        return window.location.hash.replace(/^#\/?/, '').split('?')[0];
   });
 
   useEffect(() => {
     const handleHashChange = () => {
-      setCurrentPath(window.location.hash.replace(/^#\/?/, ''));
+            setCurrentPath(window.location.hash.replace(/^#\/?/, '').split('?')[0]);
     };
     window.addEventListener('hashchange', handleHashChange);
     handleHashChange();
