@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Navigation() {
-  const [selectedPath, setSelectedPath] = useState<string>("/survey2");
+  const pathname = usePathname();
 
   const navItems = [
     { path: "/survey2", label: "설문조사" },
@@ -25,8 +26,7 @@ export default function Navigation() {
             <li key={item.path}>
               <Link
                 href={item.path}
-                className={`hover:text-white/80 ${selectedPath === item.path ? 'nav-selected' : ''}`}
-                onClick={() => setSelectedPath(item.path)}
+                className={`hover:text-white/80 ${pathname === item.path ? 'nav-selected' : ''}`}
               >
                 {item.label}
               </Link>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { PageComponentProps } from '@/components/HashRouterProvider';
 import { v4 as uuidv4 } from 'uuid';
 import { Question, QuestionType, SavedSurvey } from '@/app/survey/settings/types';
 import { MultipleChoiceEditor } from '@/app/survey/settings/new-style/components/MultipleChoiceEditor';
@@ -9,7 +9,6 @@ import { CheckBoxEditor } from '@/app/survey/settings/new-style/components/Check
 import { SideBySideEditor } from '@/app/survey/settings/new-style/components/SideBySideEditor';
 import { TextEntryEditor } from '@/app/survey/settings/new-style/components/TextEntryEditor';
 import { PreviewModal } from '@/app/survey/settings/new-style/components/PreviewModal';
-import Link from 'next/link';
 
 type EditorQuestion = Question & { isExpanded?: boolean };
 
@@ -80,9 +79,8 @@ const createNewQuestion = (type: QuestionType): EditorQuestion => {
     }
   };
 
-export default function SurveyEditor() {
-  const { id } = useParams();
-  const router = useRouter();
+export default function SurveyEditor({ params }: PageComponentProps) {
+  const surveyId = params?.id;
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -92,15 +90,15 @@ export default function SurveyEditor() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   useEffect(() => {
-    if (!id) {
+    if (!surveyId) {
       setIsLoading(false);
       setError('설문지 ID가 없습니다.');
       return;
     }
 
     try {
-      const savedSurveys = JSON.parse(localStorage.getItem('savedSurveys') || '[]');
-      const surveyToEdit = savedSurveys.find((s: SavedSurvey) => s.id === id);
+      const savedSurveys: SavedSurvey[] = JSON.parse(localStorage.getItem('savedSurveys') || '[]');
+      const surveyToEdit = savedSurveys.find(s => s.id === surveyId);
 
       if (surveyToEdit) {
         setTitle(surveyToEdit.title);
@@ -115,7 +113,7 @@ export default function SurveyEditor() {
     } finally {
       setIsLoading(false);
     }
-  }, [id]);
+  }, [surveyId]);
 
   const handleUpdateQuestion = (
     questionId: string,
@@ -145,31 +143,30 @@ export default function SurveyEditor() {
   };
 
   const handleUpdateSurvey = () => {
-    if (!id) return;
+    if (!surveyId) return;
 
     try {
-      const savedSurveys = JSON.parse(localStorage.getItem('savedSurveys') || '[]') as SavedSurvey[];
-      const surveyIndex = savedSurveys.findIndex(s => s.id === id);
+      const savedSurveys: SavedSurvey[] = JSON.parse(localStorage.getItem('savedSurveys') || '[]');
+      const surveyToEdit = savedSurveys.find(s => s.id === surveyId);
 
-      if (surveyIndex === -1) {
+      if (!surveyToEdit) {
         alert('업데이트할 설문지를 찾을 수 없습니다.');
         return;
       }
 
       const updatedSurvey: SavedSurvey = {
-        ...savedSurveys[surveyIndex],
+        ...surveyToEdit,
         title,
         description,
         questions,
         updatedAt: new Date().toISOString(),
       };
 
-      const updatedSurveys = [...savedSurveys];
-      updatedSurveys[surveyIndex] = updatedSurvey;
+      const updatedSurveys = savedSurveys.map(s => s.id === surveyId ? updatedSurvey : s);
 
       localStorage.setItem('savedSurveys', JSON.stringify(updatedSurveys));
-      alert('설문지가 성공적으로 업데이트되었습니다.');
-      router.push('/survey2');
+      alert('설문지가 성공적으로 저장되었습니다.');
+      window.location.hash = '#/';
     } catch (e) {
       console.error('설문지 업데이트 실패:', e);
       alert('설문지 업데이트 중 오류가 발생했습니다.');
@@ -210,7 +207,7 @@ export default function SurveyEditor() {
         <div className="space-x-2">
           <button onClick={() => setIsPreviewOpen(true)} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">미리보기</button>
           <button onClick={handleUpdateSurvey} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">변경사항 저장</button>
-          <Link href="/survey2" className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">목록으로</Link>
+          <a href="#/" className="text-gray-600 hover:text-gray-800">목록으로</a>
         </div>
       </div>
 

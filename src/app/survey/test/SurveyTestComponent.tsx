@@ -1,10 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-import { SavedSurvey, Question, QuestionType, MultipleChoiceOption, ColumnGroup, SubColumn } from '@/app/survey/settings/types';
-import Link from 'next/link';
+import {
+  SavedSurvey,
+  Question,
+  QuestionType,
+  MultipleChoiceOption,
+  ColumnGroup,
+  SubColumn,
+} from '@/app/survey/settings/types';
+import { PageComponentProps } from '@/components/HashRouterProvider';
 
 const QuestionPreview = ({
   question,
@@ -21,9 +27,11 @@ const QuestionPreview = ({
     case QuestionType.CHECKBOX:
     case QuestionType.MULTIPLE_CHOICE:
     case QuestionType.MULTIPLE_CHOICE_MULTIPLE: {
-      const isMultiple = question.type === QuestionType.MULTIPLE_CHOICE_MULTIPLE || question.type === QuestionType.CHECKBOX;
+      const isMultiple =
+        question.type === QuestionType.MULTIPLE_CHOICE_MULTIPLE ||
+        question.type === QuestionType.CHECKBOX;
 
-            const renderOptions = (optionsToRender: MultipleChoiceOption[], level = 0) => {
+      const renderOptions = (optionsToRender: MultipleChoiceOption[], level = 0) => {
         return optionsToRender.map((option, idx) => {
           const isSelected = answer?.includes(option.id);
           return (
@@ -42,9 +50,7 @@ const QuestionPreview = ({
                 </label>
               </div>
               {isSelected && option.children && (
-                <div className="mt-2">
-                  {renderOptions(option.children, level + 1)}
-                </div>
+                <div className="mt-2">{renderOptions(option.children, level + 1)}</div>
               )}
             </div>
           );
@@ -57,13 +63,11 @@ const QuestionPreview = ({
             Q{index + 1}. {question.text}
             {question.isRequired && <span className="text-red-500 ml-1">*</span>}
           </h3>
-          <div className="space-y-2 mt-2 ml-4">
-            {renderOptions(question.props.options || [])}
-          </div>
+          <div className="space-y-2 mt-2 ml-4">{renderOptions(question.props.options || [])}</div>
         </div>
       );
     }
-    
+
     case QuestionType.TEXT_ENTRY: {
       const props = question.props || {};
       return (
@@ -94,20 +98,18 @@ const QuestionPreview = ({
               />
             )}
             {props.maxLength && (
-              <p className="mt-1 text-xs text-gray-500">
-                최대 {props.maxLength}자까지 입력 가능
-              </p>
+              <p className="mt-1 text-xs text-gray-500">최대 {props.maxLength}자까지 입력 가능</p>
             )}
           </div>
         </div>
       );
     }
-    
+
     case QuestionType.SIDE_BY_SIDE: {
       const props = question.props || {};
       const rows = props.rows || [];
       const columns = props.columns || [];
-      
+
       if (rows.length === 0 || columns.length === 0) {
         return (
           <div className="text-gray-500">
@@ -115,29 +117,31 @@ const QuestionPreview = ({
           </div>
         );
       }
-      
-            const allSubColumns = columns.flatMap((col: ColumnGroup) => 
+
+      const allSubColumns = columns.flatMap((col: ColumnGroup) =>
         (col.subColumns || []).map((subCol: SubColumn) => ({
           ...subCol,
-          columnId: col.id
+          columnId: col.id,
         }))
       );
-      
+
       return (
         <div className="space-y-2">
           <h3 className="text-lg font-medium">
             Q{index + 1}. {question.text}
             {question.isRequired && <span className="text-red-500 ml-1">*</span>}
           </h3>
-          
+
           <div className="overflow-x-auto mt-2">
             <table className="min-w-full border">
               <thead>
                 <tr>
-                  <th className="border p-2 bg-gray-100" rowSpan={2} style={{ width: '200px' }}>항목</th>
+                  <th className="border p-2 bg-gray-100" rowSpan={2} style={{ width: '200px' }}>
+                    항목
+                  </th>
                   {columns.map((col, colIndex: number) => (
-                    <th 
-                      key={col.id || colIndex} 
+                    <th
+                      key={col.id || colIndex}
                       className="border p-2 bg-gray-50"
                       colSpan={(col.subColumns || []).length}
                     >
@@ -156,11 +160,12 @@ const QuestionPreview = ({
               <tbody>
                 {rows.map((row, rowIndex: number) => (
                   <tr key={row.id || rowIndex}>
-                    <td className="border p-2 font-medium">
-                      {row.text || `항목 ${rowIndex + 1}`}
-                    </td>
+                    <td className="border p-2 font-medium">{row.text || `항목 ${rowIndex + 1}`}</td>
                     {allSubColumns.map((subCol) => (
-                      <td key={`${subCol.columnId}-${subCol.id}-${row.id}`} className="border p-2 text-center">
+                      <td
+                        key={`${subCol.columnId}-${subCol.id}-${row.id}`}
+                        className="border p-2 text-center"
+                      >
                         <input
                           type="radio"
                           name={`row-${row.id || rowIndex}-${subCol.columnId}`}
@@ -178,19 +183,20 @@ const QuestionPreview = ({
         </div>
       );
     }
-    
-    default:
+
+    default: {
       const exhaustiveCheck: never = question;
       return (
         <div className="text-gray-500">
           Q{index + 1}. {(exhaustiveCheck as Question).text} (미리보기를 지원하지 않는 질문 유형입니다)
         </div>
       );
+    }
   }
 };
-export default function SurveyTestPage() {
-  const { id } = useParams();
-  const router = useRouter();
+
+export default function SurveyTestComponent({ params }: PageComponentProps) {
+  const surveyId = params?.id;
   const [survey, setSurvey] = useState<SavedSurvey | null>(null);
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -198,10 +204,15 @@ export default function SurveyTestPage() {
 
   useEffect(() => {
     const loadSurvey = () => {
+      if (!surveyId) {
+        setError('설문지 ID가 제공되지 않았습니다.');
+        setIsLoading(false);
+        return;
+      }
       try {
         const savedSurveys = JSON.parse(localStorage.getItem('savedSurveys') || '[]');
-        const foundSurvey = savedSurveys.find((s: SavedSurvey) => s.id === id) as SavedSurvey;
-        
+        const foundSurvey = savedSurveys.find((s: SavedSurvey) => s.id === surveyId) as SavedSurvey;
+
         if (foundSurvey) {
           setSurvey(foundSurvey);
         } else {
@@ -216,10 +227,14 @@ export default function SurveyTestPage() {
     };
 
     loadSurvey();
-  }, [id]);
+  }, [surveyId]);
 
-  const handleAnswerChange = (questionId: string, value: string | string[], questionType: QuestionType) => {
-    setAnswers(prev => {
+  const handleAnswerChange = (
+    questionId: string,
+    value: string | string[],
+    questionType: QuestionType
+  ) => {
+    setAnswers((prev) => {
       const currentAnswers = prev[questionId] || [];
       let newAnswers: string[] = [...currentAnswers];
 
@@ -228,7 +243,7 @@ export default function SurveyTestPage() {
         case QuestionType.MULTIPLE_CHOICE_MULTIPLE:
           if (typeof value === 'string') {
             newAnswers = currentAnswers.includes(value)
-              ? currentAnswers.filter(id => id !== value)
+              ? currentAnswers.filter((id) => id !== value)
               : [...currentAnswers, value];
           }
           break;
@@ -241,7 +256,7 @@ export default function SurveyTestPage() {
         case QuestionType.SIDE_BY_SIDE:
           if (typeof value === 'string') {
             const [rowId] = value.split(':');
-            const filteredAnswers = currentAnswers.filter(ans => !ans.startsWith(`${rowId}:`));
+            const filteredAnswers = currentAnswers.filter((ans) => !ans.startsWith(`${rowId}:`));
             newAnswers = [...filteredAnswers, value];
           }
           break;
@@ -256,10 +271,10 @@ export default function SurveyTestPage() {
     if (window.confirm('정말 이 설문지를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
       try {
         const savedSurveys = JSON.parse(localStorage.getItem('savedSurveys') || '[]');
-        const updatedSurveys = savedSurveys.filter((s: SavedSurvey) => s.id !== id);
-        
+        const updatedSurveys = savedSurveys.filter((s: SavedSurvey) => s.id !== surveyId);
+
         localStorage.setItem('savedSurveys', JSON.stringify(updatedSurveys));
-        router.push('/survey/test');
+        window.location.hash = '/';
       } catch (error) {
         console.error('설문지 삭제 중 오류 발생:', error);
         alert('설문지 삭제 중 오류가 발생했습니다.');
@@ -296,7 +311,7 @@ export default function SurveyTestPage() {
             isAnswered = true;
             break;
           }
-          const answeredRows = new Set((answer || []).map(a => a.split(':')[0]));
+          const answeredRows = new Set((answer || []).map((a) => a.split(':')[0]));
           isAnswered = rows.length === answeredRows.size;
           break;
 
@@ -325,7 +340,7 @@ export default function SurveyTestPage() {
       const updatedResults = [...savedResults, result];
       localStorage.setItem('surveyResults', JSON.stringify(updatedResults));
       alert('설문이 성공적으로 제출되었습니다.');
-      router.push('/survey/test');
+      window.location.hash = '/';
     } catch (error) {
       console.error('설문 결과 저장 중 오류 발생:', error);
       alert('설문 결과 저장 중 오류가 발생했습니다.');
@@ -346,12 +361,12 @@ export default function SurveyTestPage() {
         <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
           <p className="text-red-700">{error || '알 수 없는 오류가 발생했습니다.'}</p>
         </div>
-        <Link 
-          href="/survey/test" 
+        <a
+          href="#/"
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-600 inline-block"
         >
           목록으로 돌아가기
-        </Link>
+        </a>
       </div>
     );
   }
@@ -362,61 +377,56 @@ export default function SurveyTestPage() {
         <div className="flex justify-between items-start mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{survey.title}</h1>
-            {survey.description && (
-              <p className="text-gray-600">{survey.description}</p>
-            )}
+            {survey.description && <p className="text-gray-600">{survey.description}</p>}
             <p className="text-sm text-gray-500 mt-2">
               생성일: {new Date(survey.createdAt).toLocaleString()}
               {survey.updatedAt !== survey.createdAt && (
-                <span className="ml-2">(마지막 수정: {new Date(survey.updatedAt).toLocaleString()})</span>
+                <span className="ml-2">
+                  (마지막 수정: {new Date(survey.updatedAt).toLocaleString()})
+                </span>
               )}
             </p>
           </div>
-          
+
           <div className="flex space-x-3">
-            <Link 
-              href="/survey/test"
+            <a
+              href="#/"
               className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
             >
               목록으로
-            </Link>
+            </a>
             <button
               onClick={handleDelete}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              style={{display:'none'}}
+              style={{ display: 'none' }}
             >
               삭제
             </button>
           </div>
         </div>
       </div>
-      
+
       <div className="bg-white rounded-xl shadow-md p-8 space-y-8">
         {survey.questions.length > 0 ? (
-          <div className="space-y-8">
-            {survey.questions.map((question, index) => (
-              <div 
-                key={question.id} 
-                className="border-b border-gray-200 pb-8 last:border-0 last:pb-0"
-              >
-                <QuestionPreview 
-                  question={question} 
-                  index={index} 
-                  answer={answers[question.id]} 
-                  onAnswerChange={(value, type) => handleAnswerChange(question.id, value, type)} 
-                />
-              </div>
-            ))}
-          </div>
+          survey.questions.map((q, index) => (
+            <div key={q.id} className="border-t pt-6 first:border-t-0 first:pt-0">
+              <QuestionPreview
+                question={q}
+                index={index}
+                answer={answers[q.id] || []}
+                onAnswerChange={(value, type) => handleAnswerChange(q.id, value, type)}
+              />
+            </div>
+          ))
         ) : (
-          <p className="text-gray-500 text-center">이 설문지에는 질문이 없습니다.</p>
+          <p className="text-gray-500 text-center">질문이 없습니다.</p>
         )}
       </div>
 
-      <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end">
+      <div className="mt-8 flex justify-end">
         <button
           onClick={handleSubmit}
-          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           제출하기
         </button>
