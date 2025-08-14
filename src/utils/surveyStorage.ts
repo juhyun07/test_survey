@@ -39,7 +39,7 @@ export const saveSurvey = (surveyData: Omit<SavedSurvey, 'id' | 'createdAt' | 'u
     }
 
     localStorage.setItem('savedSurveys', JSON.stringify(savedSurveys));
-    apiTest(surveyData); /// api test
+    // apiTest(surveyData); /// api test
     return id || ''; // 저장된 설문지 ID 반환
   } catch (error) {
     console.error('설문지 저장 중 오류가 발생했습니다:', error);
