@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { saveSurvey } from '@/utils/surveyStorage';
 
 
 import { Question, QuestionType, SavedSurvey } from '../types';
@@ -115,24 +116,14 @@ export default function QualtricsStyleSurveyEditor() {
   };
 
   // 설문지 저장 처리
-  const handleSaveSurvey = (surveyData: Omit<SavedSurvey, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newSurvey: SavedSurvey = {
-      ...surveyData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    // 기존 설문지 목록 가져오기
-    const savedSurveys = JSON.parse(localStorage.getItem('savedSurveys') || '[]');
-    
-    // 새 설문지 추가
-    const updatedSurveys = [...savedSurveys, newSurvey];
-    
-    // 로컬 스토리지에 저장
-    localStorage.setItem('savedSurveys', JSON.stringify(updatedSurveys));
-    
-    alert('설문지가 성공적으로 저장되었습니다.');
+  const handleSaveSurvey = async (surveyData: Omit<SavedSurvey, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      await saveSurvey(surveyData);
+      alert('설문지가 성공적으로 저장되었습니다.');
+    } catch (error) {
+      console.error('설문지 저장 중 오류 발생:', error);
+      alert('설문지 저장 중 오류가 발생했습니다.');
+    }
   };
 
   // 질문 업데이트 핸들러

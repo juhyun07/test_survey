@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { PageComponentProps } from '@/components/HashRouterProvider';
 import { v4 as uuidv4 } from 'uuid';
+import { saveSurvey, getSurveyById } from '@/utils/surveyStorage';
 import { Question, QuestionType, SavedSurvey } from '@/app/survey/settings/types';
 import { MultipleChoiceEditor } from '@/app/survey/settings/new-style/components/MultipleChoiceEditor';
 import { CheckBoxEditor } from '@/app/survey/settings/new-style/components/CheckBoxEditor';
@@ -90,26 +91,18 @@ export default function SurveyEditor({ params }: PageComponentProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   useEffect(() => {
-    if (!surveyId) {
-      setIsLoading(false);
-      setError('설문지 ID가 없습니다.');
-      return;
-    }
+    if (!surveyId) return;
 
     try {
-      const savedSurveys: SavedSurvey[] = JSON.parse(localStorage.getItem('savedSurveys') || '[]');
-      const surveyToEdit = savedSurveys.find(s => s.id === surveyId);
-
+      const surveyToEdit = getSurveyById(surveyId);
       if (surveyToEdit) {
-        setTitle(surveyToEdit.title);
+        setTitle(surveyToEdit.title || '');
         setDescription(surveyToEdit.description || '');
-        setQuestions(surveyToEdit.questions.map((q: Question) => ({ ...q, isExpanded: false })));
-      } else {
-        setError('설문지를 찾을 수 없습니다.');
+        setQuestions(surveyToEdit.questions || []);
       }
-    } catch (e) {
-      console.error('설문지 로딩 실패:', e);
-      setError('설문지를 불러오는 데 실패했습니다.');
+    } catch (error) {
+      console.error('설문지 불러오기 실패:', error);
+      alert('설문지 불러오기 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -142,33 +135,28 @@ export default function SurveyEditor({ params }: PageComponentProps) {
     );
   };
 
-  const handleUpdateSurvey = () => {
+  const handleUpdateSurvey = async () => {
     if (!surveyId) return;
 
     try {
-      const savedSurveys: SavedSurvey[] = JSON.parse(localStorage.getItem('savedSurveys') || '[]');
-      const surveyToEdit = savedSurveys.find(s => s.id === surveyId);
-
+      const surveyToEdit = getSurveyById(surveyId);
       if (!surveyToEdit) {
         alert('업데이트할 설문지를 찾을 수 없습니다.');
         return;
       }
 
-      const updatedSurvey: SavedSurvey = {
+      const updatedSurvey = {
         ...surveyToEdit,
         title,
         description,
         questions,
-        updatedAt: new Date().toISOString(),
       };
 
-      const updatedSurveys = savedSurveys.map(s => s.id === surveyId ? updatedSurvey : s);
-
-      localStorage.setItem('savedSurveys', JSON.stringify(updatedSurveys));
+      await saveSurvey(updatedSurvey, surveyId);
       alert('설문지가 성공적으로 저장되었습니다.');
       window.location.hash = '#/';
-    } catch (e) {
-      console.error('설문지 업데이트 실패:', e);
+    } catch (error) {
+      console.error('설문지 업데이트 실패:', error);
       alert('설문지 업데이트 중 오류가 발생했습니다.');
     }
   };
