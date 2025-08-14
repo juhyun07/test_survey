@@ -1,4 +1,5 @@
 import { SavedSurvey } from '@/app/survey/settings/types';
+import instance from "@/utils/AxiosInterceptor";
 
 // 로컬 스토리지에서 설문지 목록 가져오기
 export const getSavedSurveys = (): SavedSurvey[] => {
@@ -15,7 +16,7 @@ export const saveSurvey = (surveyData: Omit<SavedSurvey, 'id' | 'createdAt' | 'u
   try {
     const savedSurveys = getSavedSurveys();
     const now = new Date().toISOString();
-    
+
     if (id) {
       // 기존 설문지 업데이트
       const index = savedSurveys.findIndex(survey => survey.id === id);
@@ -38,12 +39,25 @@ export const saveSurvey = (surveyData: Omit<SavedSurvey, 'id' | 'createdAt' | 'u
     }
 
     localStorage.setItem('savedSurveys', JSON.stringify(savedSurveys));
+    apiTest(surveyData); /// api test
     return id || ''; // 저장된 설문지 ID 반환
   } catch (error) {
     console.error('설문지 저장 중 오류가 발생했습니다:', error);
     throw new Error('설문지 저장에 실패했습니다.');
   }
 };
+
+const apiTest = async (surveyData: Omit<SavedSurvey, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const response = await instance.post('/api/nps/survey/test'
+      , surveyData
+      , {
+          headers: {
+            'Content-Type': 'application/json',
+          }});
+  console.log('resp:', response.data);
+
+  return response.data;
+}
 
 // 설문지 삭제
 export const deleteSurvey = (id: string): boolean => {
